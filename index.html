@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101c32">
+  <meta name="description" content="국내 증시의 시장 환경, 기술적 패턴, 상대강도와 손익비를 한 화면에서 점검하는 무료 투자 검토 도구">
+  <title>K-Pattern Radar — 국내증시 투자 검토 도구</title>
+  <style>
+    :root {
+      --navy:#101c32; --navy2:#182843; --ink:#172033; --muted:#667085;
+      --line:#e7eaf0; --soft:#f5f7fa; --white:#fff; --mint:#14b884;
+      --mint-soft:#e8f8f2; --blue:#3276e8; --blue-soft:#eaf1fd;
+      --amber:#d98a00; --amber-soft:#fff5df; --red:#d84b55; --red-soft:#fff0f1;
+      --shadow:0 12px 34px rgba(20,30,50,.08); --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--soft);color:var(--ink);font-family:Pretendard,"Noto Sans KR","Apple SD Gothic Neo",system-ui,-apple-system,sans-serif;line-height:1.55}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(50,118,232,.28);outline-offset:2px}
+    .skip{position:fixed;left:16px;top:-60px;z-index:100;background:#fff;padding:10px 14px;border-radius:8px;color:#111}
+    .skip:focus{top:12px}
+    .shell{min-height:100vh;display:grid;grid-template-columns:250px 1fr}
+    .sidebar{position:fixed;inset:0 auto 0 0;width:250px;background:var(--navy);color:#fff;padding:26px 18px;display:flex;flex-direction:column;z-index:20}
+    .brand{display:flex;align-items:center;gap:12px;padding:0 10px 26px}
+    .brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(140deg,#2d78ed,#17bc87);display:grid;place-items:center;box-shadow:0 8px 20px rgba(20,184,132,.18)}
+    .brand-mark svg{width:24px;height:24px}
+    .brand strong{font-size:16px;letter-spacing:-.02em}
+    .brand span{display:block;font-size:11px;color:#91a3bf;margin-top:1px;letter-spacing:.08em}
+    .nav{display:grid;gap:7px}
+    .nav button{border:0;background:transparent;color:#aebbd0;text-align:left;border-radius:11px;padding:11px 13px;display:flex;gap:11px;align-items:center;font-size:14px;font-weight:700}
+    .nav button:hover{background:rgba(255,255,255,.06);color:#fff}
+    .nav button.active{background:#243754;color:#fff}
+    .nav .ico{width:22px;text-align:center;font-size:16px}
+    .side-note{margin-top:auto;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px;background:rgba(255,255,255,.035)}
+    .side-note strong{font-size:12px;color:#dce4f0}
+    .side-note p{margin:5px 0 0;font-size:11px;color:#8799b5}
+    .main{grid-column:2;min-width:0}
+    .topbar{height:72px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 34px;position:sticky;top:0;z-index:15}
+    .topbar h1{font-size:17px;margin:0;letter-spacing:-.03em}
+    .topbar-meta{display:flex;gap:9px;align-items:center}
+    .badge{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:800}
+    .badge.demo{background:var(--amber-soft);color:#9b6100}
+    .badge.demo:before{content:"";width:6px;height:6px;background:#efa51f;border-radius:50%}
+    .date{font-size:12px;color:var(--muted)}
+    .content{max-width:1350px;padding:30px 34px 70px;margin:0 auto}
+    .view{display:none;animation:fade .22s ease}
+    .view.active{display:block}
+    @keyframes fade{from{opacity:.4;transform:translateY(3px)}}
+    .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:23px}
+    .eyebrow{margin:0 0 7px;color:var(--blue);font-size:11px;font-weight:900;letter-spacing:.13em;text-transform:uppercase}
+    .hero h2{font-size:28px;margin:0;letter-spacing:-.045em;line-height:1.25}
+    .hero .sub{color:var(--muted);font-size:13px;margin:7px 0 0}
+    .hero-actions{display:flex;gap:9px;flex:none}
+    .btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 13px;color:#344054;font-weight:800;font-size:12px;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+    .btn:hover{border-color:#cbd3df;background:#fafbfc}
+    .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+    .btn.primary:hover{background:#1b2c4a}
+    .btn.ghost{box-shadow:none;background:transparent}
+    .grid{display:grid;gap:16px}
+    .market-grid{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px}
+    .market-card,.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 2px 5px rgba(20,30,50,.025)}
+    .market-card{padding:21px 22px;display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center}
+    .market-title{display:flex;align-items:center;gap:8px}
+    .market-title strong{font-size:14px}
+    .regime{font-size:10px;font-weight:900;border-radius:999px;padding:4px 7px}
+    .regime.NEUTRAL{background:var(--amber-soft);color:#9b6100}
+    .regime.RISK_ON{background:var(--mint-soft);color:#087a57}
+    .regime.RISK_OFF{background:var(--red-soft);color:#b52e39}
+    .market-value{font-size:27px;letter-spacing:-.03em;margin:9px 0 1px;font-weight:800}
+    .market-meta{display:flex;gap:13px;color:var(--muted);font-size:11px}
+    .up{color:#0d9b6f!important}.down{color:var(--red)!important}
+    .spark{width:150px;height:62px}
+    .spark path.line{fill:none;stroke:var(--blue);stroke-width:2.5;stroke-linecap:round}
+    .spark path.fill{fill:url(#grad)}
+    .decision-banner{border-radius:var(--radius);background:var(--navy);color:#fff;padding:21px 23px;display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:16px;overflow:hidden;position:relative}
+    .decision-banner:after{content:"";position:absolute;width:210px;height:210px;border:38px solid rgba(43,118,235,.15);border-radius:50%;right:-70px;top:-105px}
+    .decision-copy{position:relative;z-index:1;display:flex;align-items:center;gap:16px}
+    .decision-icon{width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.1);display:grid;place-items:center;font-size:22px}
+    .decision-copy small{color:#9fb0ca;font-weight:700}
+    .decision-copy h3{margin:2px 0 0;font-size:18px}
+    .decision-stats{display:flex;position:relative;z-index:1;gap:24px;padding-right:80px}
+    .decision-stats span{display:block;color:#91a3bf;font-size:10px;font-weight:700}
+    .decision-stats strong{font-size:15px}
+    .dashboard-grid{grid-template-columns:minmax(0,1.55fr) minmax(280px,.8fr)}
+    .card{padding:21px}
+    .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .card-head h3{font-size:14px;margin:0;letter-spacing:-.02em}
+    .card-head p{font-size:11px;color:var(--muted);margin:2px 0 0}
+    .text-btn{border:0;background:transparent;color:var(--blue);font-size:11px;font-weight:900;padding:4px}
+    .signal-list{display:grid;gap:10px}
+    .signal-row{border:1px solid var(--line);border-radius:13px;padding:15px;background:#fff;display:grid;grid-template-columns:minmax(155px,1.3fr) 82px 80px 105px 28px;gap:11px;align-items:center;text-align:left;color:inherit;width:100%}
+    .signal-row:hover{border-color:#bdc9da;box-shadow:0 7px 20px rgba(25,40,65,.055)}
+    .stock-name{display:flex;align-items:center;gap:10px;min-width:0}
+    .score-dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:12px;font-weight:900;background:var(--blue-soft);color:var(--blue);flex:none}
+    .score-dot.A,.score-dot.S{background:var(--mint-soft);color:#087a57}
+    .score-dot.C{background:var(--amber-soft);color:#9b6100}
+    .stock-name strong{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .stock-name small,.cell small{display:block;font-size:10px;color:var(--muted);margin-top:1px}
+    .cell{font-size:12px;font-weight:800}
+    .status-chip,.opinion-chip{display:inline-flex;align-items:center;justify-content:center;padding:4px 7px;border-radius:7px;font-size:10px;font-weight:900}
+    .status-chip.WATCH{background:var(--amber-soft);color:#9b6100}
+    .status-chip.COMPLETED{background:var(--blue-soft);color:#1f61c8}
+    .status-chip.FAILED{background:var(--red-soft);color:#b52e39}
+    .status-chip.TRIGGERED,.status-chip.RETEST{background:var(--mint-soft);color:#087a57}
+    .chev{color:#98a2b3;font-size:20px}
+    .leader-list{display:grid;gap:2px}
+    .leader-row{border:0;background:transparent;border-bottom:1px solid #edf0f4;padding:12px 3px;display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;text-align:left;color:inherit;width:100%}
+    .leader-row:last-child{border-bottom:0}
+    .leader-row:hover strong{color:var(--blue)}
+    .rank{width:24px;height:24px;border-radius:7px;background:#f0f3f7;color:#6b778c;display:grid;place-items:center;font-size:10px;font-weight:900}
+    .rank.top{background:var(--navy);color:#fff}
+    .leader-row strong{font-size:12px;display:block}.leader-row small{font-size:10px;color:var(--muted)}
+    .leader-score{text-align:right}
+    .leader-score strong{font-size:13px;color:var(--ink)}
+    .leader-score small{font-weight:800}
+    .filters{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;gap:9px;align-items:center;margin-bottom:15px}
+    .search{flex:1;min-width:170px;position:relative}
+    .search input{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 10px 9px 34px;font-size:12px;color:var(--ink);background:#fafbfc}
+    .search:before{content:"⌕";position:absolute;left:12px;top:4px;color:#7d899a;font-size:20px}
+    select{border:1px solid var(--line);border-radius:9px;padding:9px 30px 9px 10px;background:#fafbfc;color:#475467;font-size:12px;font-weight:700}
+    .table-wrap{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+    table{width:100%;border-collapse:collapse}
+    th{text-align:left;background:#f8f9fb;color:#788396;font-size:10px;letter-spacing:.04em;padding:12px 14px;border-bottom:1px solid var(--line)}
+    td{padding:14px;border-bottom:1px solid #edf0f3;font-size:12px;vertical-align:middle}
+    tbody tr{cursor:pointer} tbody tr:hover{background:#fafbfd} tbody tr:last-child td{border-bottom:0}
+    td strong{display:block;font-size:12px} td small{color:var(--muted);font-size:10px}
+    .opinion-chip.review{background:var(--mint-soft);color:#087a57}
+    .opinion-chip.wait{background:var(--amber-soft);color:#9b6100}
+    .opinion-chip.exclude{background:var(--red-soft);color:#b52e39}
+    .metric-grid{grid-template-columns:repeat(4,1fr);margin-bottom:16px}
+    .metric{padding:19px}
+    .metric span{font-size:10px;color:var(--muted);font-weight:800}
+    .metric strong{display:block;font-size:24px;margin:4px 0 2px;letter-spacing:-.04em}
+    .metric small{font-size:10px;color:var(--muted)}
+    .bars{display:grid;gap:13px}
+    .bar-row{display:grid;grid-template-columns:120px 1fr 55px;gap:10px;align-items:center;font-size:11px}
+    .bar-track{height:8px;background:#edf0f4;border-radius:999px;overflow:hidden}
+    .bar-fill{height:100%;background:var(--blue);border-radius:999px}
+    .bar-fill.negative{background:var(--red)}
+    .info-grid{grid-template-columns:repeat(3,1fr)}
+    .info-card h3{font-size:14px;margin:0 0 7px}.info-card p,.info-card li{font-size:11px;color:var(--muted)}
+    .info-card ol,.info-card ul{padding-left:18px;margin:9px 0 0}
+    .upload-box{border:1.5px dashed #c7d0dd;border-radius:16px;padding:26px;text-align:center;background:#fafbfd}
+    .upload-box.drag{border-color:var(--blue);background:var(--blue-soft)}
+    .upload-icon{width:48px;height:48px;margin:0 auto 10px;border-radius:14px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;font-size:22px}
+    .upload-box h3{font-size:15px;margin:0}.upload-box p{font-size:11px;color:var(--muted);max-width:580px;margin:6px auto 14px}
+    .upload-actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+    input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+    .format{margin-top:16px;background:#111a2d;color:#d6dfed;border-radius:13px;padding:15px;overflow:auto;text-align:left;font:11px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace}
+    .notice{display:flex;gap:10px;padding:13px 14px;border-radius:12px;background:var(--amber-soft);color:#765016;font-size:11px;margin-top:15px}
+    .footer{color:#8b94a4;font-size:10px;margin-top:22px;display:flex;justify-content:space-between;gap:18px}
+    .mobile-nav{display:none}
+    dialog{border:0;padding:0;border-radius:20px;width:min(700px,calc(100% - 28px));max-height:88vh;box-shadow:0 30px 90px rgba(0,0,0,.25);color:var(--ink)}
+    dialog::backdrop{background:rgba(8,16,30,.58);backdrop-filter:blur(3px)}
+    .modal-head{display:flex;justify-content:space-between;align-items:flex-start;padding:22px 24px 17px;border-bottom:1px solid var(--line)}
+    .modal-head h3{font-size:20px;margin:0}.modal-head p{margin:3px 0 0;color:var(--muted);font-size:11px}
+    .close{border:0;background:#f1f3f6;width:33px;height:33px;border-radius:10px;font-size:20px;color:#667085}
+    .modal-body{padding:20px 24px 25px;overflow:auto;max-height:calc(88vh - 84px)}
+    .opinion{border-radius:14px;padding:16px 17px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+    .opinion.wait{background:var(--amber-soft)}.opinion.exclude{background:var(--red-soft)}.opinion.review{background:var(--mint-soft)}
+    .opinion small{display:block;font-size:10px;color:#766b5a}.opinion strong{font-size:16px}
+    .levels{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .level{background:#f7f8fa;border-radius:11px;padding:12px}
+    .level span{font-size:9px;color:var(--muted);font-weight:800}.level strong{display:block;font-size:12px;margin-top:4px}
+    .score-break{margin-top:17px}
+    .score-line{display:grid;grid-template-columns:100px 1fr 40px;gap:10px;align-items:center;margin-top:9px;font-size:10px;color:#536074}
+    .bullet-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:17px}
+    .bullet-box{border:1px solid var(--line);border-radius:12px;padding:13px}
+    .bullet-box h4{margin:0 0 6px;font-size:11px}.bullet-box ul{margin:0;padding-left:17px;color:var(--muted);font-size:10px}
+    .empty{padding:48px 20px;text-align:center;color:var(--muted);font-size:12px}
+    .toast{position:fixed;right:22px;bottom:22px;background:#132039;color:#fff;padding:12px 15px;border-radius:11px;box-shadow:var(--shadow);font-size:11px;font-weight:700;z-index:50;transform:translateY(90px);opacity:0;transition:.25s}
+    .toast.show{transform:none;opacity:1}
+    @media(max-width:940px){
+      .shell{display:block}.sidebar{display:none}.main{display:block}.topbar{padding:0 20px;height:62px}.content{padding:23px 18px 92px}
+      .mobile-nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;z-index:25;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:7px 4px max(7px,env(safe-area-inset-bottom));backdrop-filter:blur(14px)}
+      .mobile-nav button{border:0;background:transparent;color:#808b9d;font-size:9px;font-weight:800;padding:3px}
+      .mobile-nav button span{display:block;font-size:18px;line-height:1.2}.mobile-nav button.active{color:var(--blue)}
+      .dashboard-grid{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,1fr)}.info-grid{grid-template-columns:1fr}
+      .decision-stats{padding-right:30px}.signal-row{grid-template-columns:1.4fr 80px 88px 20px}.signal-row .hide-tablet{display:none}
+    }
+    @media(max-width:650px){
+      .topbar h1{font-size:14px}.date{display:none}.hero{align-items:flex-start;flex-direction:column}.hero h2{font-size:24px}.hero-actions{width:100%}.hero-actions .btn{flex:1}
+      .market-grid{grid-template-columns:1fr}.market-card{grid-template-columns:1fr 115px;padding:17px}.spark{width:115px}
+      .decision-banner{align-items:flex-start;flex-direction:column}.decision-stats{padding:0;gap:18px}.decision-banner:after{display:none}
+      .filters{align-items:stretch;flex-wrap:wrap}.search{width:100%;flex-basis:100%}.filters select{flex:1}
+      .table-wrap{overflow:auto}table{min-width:720px}
+      .signal-row{grid-template-columns:1fr 78px 18px}.signal-row .hide-mobile{display:none}
+      .metric-grid{grid-template-columns:1fr 1fr}.metric strong{font-size:21px}
+      .levels{grid-template-columns:1fr 1fr}.bullet-columns{grid-template-columns:1fr}.footer{display:block}.footer span{display:block;margin-top:4px}
+      .bar-row{grid-template-columns:88px 1fr 45px}.modal-head,.modal-body{padding-left:17px;padding-right:17px}
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">본문 바로가기</a>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 17.5 9 12l3 3 7-8" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h4v4" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </div>
+        <div><strong>K-Pattern Radar</strong><span>KOREA MARKET LAB</span></div>
+      </div>
+      <nav class="nav" aria-label="주요 메뉴">
+        <button class="active" data-view="home"><span class="ico">⌂</span>시장 대시보드</button>
+        <button data-view="signals"><span class="ico">◎</span>종목 검토</button>
+        <button data-view="leaders"><span class="ico">↗</span>섹터 리더</button>
+        <button data-view="performance"><span class="ico">▥</span>성과 점검</button>
+        <button data-view="data"><span class="ico">⇧</span>내 데이터 분석</button>
+        <button data-view="guide"><span class="ico">?</span>판단 기준</button>
+      </nav>
+      <div class="side-note">
+        <strong>투자 판단 보조 도구</strong>
+        <p>자동 주문이나 수익 보장을 제공하지 않습니다. 최종 판단과 책임은 사용자에게 있습니다.</p>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <header class="topbar">
+        <h1 id="page-title">시장 대시보드</h1>
+        <div class="topbar-meta">
+          <span class="badge demo" id="mode-badge">예시 데이터</span>
+          <span class="date" id="as-of">기준일 2026.07.27</span>
+        </div>
+      </header>
+      <div class="content">
+        <section class="view active" id="view-home">
+          <div class="hero">
+            <div>
+              <p class="eyebrow">Market overview</p>
+              <h2>오늘 시장, 먼저 위험부터 확인하세요</h2>
+              <p class="sub">시장 추세와 종목 신호를 함께 보고 추격 매수를 피하도록 설계했습니다.</p>
+            </div>
+            <div class="hero-actions">
+              <button class="btn" data-go="guide">판단 기준 보기</button>
+              <button class="btn primary" data-go="data">최신 데이터 불러오기</button>
+            </div>
+          </div>
+          <div class="grid market-grid" id="market-cards"></div>
+          <div class="decision-banner" id="market-decision"></div>
+          <div class="grid dashboard-grid">
+            <section class="card">
+              <div class="card-head">
+                <div><h3>우선 확인할 신호</h3><p>점수순으로 정렬되며 완료·실패 신호는 매수 후보에서 제외됩니다.</p></div>
+                <button class="text-btn" data-go="signals">전체 보기 →</button>
+              </div>
+              <div class="signal-list" id="home-signals"></div>
+            </section>
+            <section class="card">
+              <div class="card-head">
+                <div><h3>섹터 리더</h3><p>유동성·상대강도·재무 안정성 종합</p></div>
+                <button class="text-btn" data-go="leaders">더 보기 →</button>
+              </div>
+              <div class="leader-list" id="home-leaders"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-signals">
+          <div class="hero">
+            <div><p class="eyebrow">Stock decision</p><h2>종목별 투자 검토</h2><p class="sub">점수 하나가 아닌 추세·상대강도·거래량·손익비를 함께 확인합니다.</p></div>
+            <div class="hero-actions"><button class="btn" id="export-csv">검토표 CSV 저장</button><button class="btn primary" data-go="data">데이터 교체</button></div>
+          </div>
+          <div class="filters">
+            <label class="search"><span class="skip">종목 검색</span><input id="search" type="search" placeholder="종목명 또는 종목코드"></label>
+            <select id="market-filter" aria-label="시장 필터"><option value="">전체 시장</option><option>KOSPI</option><option>KOSDAQ</option></select>
+            <select id="opinion-filter" aria-label="검토 의견 필터"><option value="">전체 의견</option><option value="review">검토 가능</option><option value="wait">관망</option><option value="exclude">제외</option></select>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>종목</th><th>시장·업종</th><th>패턴 / 상태</th><th>점수</th><th>현재가</th><th>손익비</th><th>검토 의견</th></tr></thead>
+            <tbody id="signal-table"></tbody>
+          </table><div class="empty" id="signal-empty" hidden>조건에 맞는 종목이 없습니다.</div></div>
+        </section>
+
+        <section class="view" id="view-leaders">
+          <div class="hero"><div><p class="eyebrow">Sector leadership</p><h2>섹터별 주도주 후보</h2><p class="sub">주도주 점수는 매수 신호가 아니라 분석 대상을 좁히기 위한 우선순위입니다.</p></div></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>순위</th><th>종목</th><th>섹터</th><th>유형</th><th>상대강도</th><th>주도주 점수</th><th>패턴 신호</th></tr></thead>
+            <tbody id="leader-table"></tbody>
+          </table></div>
+        </section>
+
+        <section class="view" id="view-performance">
+          <div class="hero"><div><p class="eyebrow">Evidence check</p><h2>과거 성과와 한계</h2><p class="sub">좋아 보이는 신호보다 실제 진입 후 성과를 먼저 봅니다.</p></div></div>
+          <div class="grid metric-grid" id="metrics"></div>
+          <div class="grid dashboard-grid">
+            <section class="card"><div class="card-head"><div><h3>패턴별 평균 수익률</h3><p>거래비용과 슬리피지를 반영한 예시 백테스트</p></div></div><div class="bars" id="pattern-bars"></div></section>
+            <section class="card"><div class="card-head"><div><h3>해석</h3><p>현재 표본에서 확인해야 할 점</p></div></div>
+              <div class="notice" style="margin-top:0"><span>!</span><span><strong>보수적 판단 필요</strong><br>진입 표본 6건으로 통계적 확신이 낮고, 평균 수익률과 손익비가 음(-)의 방향입니다.</span></div>
+              <ul style="font-size:11px;color:var(--muted);padding-left:18px;line-height:1.8">
+                <li>패턴만 보고 진입하지 말고 거래량과 상대강도를 함께 확인</li>
+                <li>보수적 진입가 도달 전 추격 매수 금지</li>
+                <li>최소 30건 이상 누적 후 전략 유효성을 재평가</li>
+              </ul>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-data">
+          <div class="hero"><div><p class="eyebrow">Bring your data</p><h2>최신 데이터로 다시 분석</h2><p class="sub">파일은 외부로 전송되지 않으며 이 브라우저 안에서만 계산됩니다.</p></div></div>
+          <section class="card">
+            <div class="upload-box" id="drop-zone">
+              <div class="upload-icon">⇧</div>
+              <h3>CSV 또는 JSON 파일을 놓아주세요</h3>
+              <p>증권사 HTS·데이터 서비스에서 내려받은 값을 아래 열 이름에 맞추면 여러 종목의 점수와 검토 의견을 한 번에 계산합니다.</p>
+              <div class="upload-actions">
+                <label class="btn primary" for="file-input">파일 선택</label><input id="file-input" type="file" accept=".csv,.json,text/csv,application/json">
+                <button class="btn" id="download-template">CSV 양식 받기</button>
+                <button class="btn ghost" id="restore-sample">예시 데이터 복원</button>
+              </div>
+            </div>
+            <div class="format">code,name,market,sector,close,ma20,ma60,ma120,return20,return60,volumeRatio,sectorRS,stockRS,pattern,status,entry,stop,target
+005930,삼성전자,KOSPI,반도체,70000,68500,67000,65000,0.04,0.12,1.6,0.08,0.10,ASCENDING_TRIANGLE,WATCH,70500,66500,78000</div>
+            <div class="notice"><span>!</span><span><strong>필수 열:</strong> code, name, market, close. 나머지 값이 없으면 해당 항목은 중립 점수로 처리합니다. 수익률과 상대강도는 5%를 <code>0.05</code>로 입력합니다.</span></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-guide">
+          <div class="hero"><div><p class="eyebrow">Methodology</p><h2>판단 기준과 안전장치</h2><p class="sub">매수 추천 대신, 검토할 조건과 피해야 할 조건을 투명하게 보여줍니다.</p></div></div>
+          <div class="grid info-grid">
+            <section class="card info-card"><h3>1. 시장 환경</h3><p>지수 종가와 20·60·120일 이동평균의 배열을 봅니다. 위험회피 구간에서는 개별 종목 점수가 높아도 신규 진입을 보수적으로 판단합니다.</p></section>
+            <section class="card info-card"><h3>2. 종목 점수</h3><p>추세 25점, 종목 상대강도 20점, 섹터 상대강도 15점, 거래량 15점, 패턴 15점, 손익비 10점으로 계산합니다.</p></section>
+            <section class="card info-card"><h3>3. 검토 의견</h3><p>75점 이상, 상승형 유효 신호, 1.5 이상의 손익비가 함께 충족되어야 “검토 가능”으로 표시합니다. 하나라도 부족하면 관망 또는 제외합니다.</p></section>
+            <section class="card info-card"><h3>등급 기준</h3><ul><li>S: 85점 이상</li><li>A: 75~84점</li><li>B: 65~74점</li><li>C: 65점 미만</li></ul></section>
+            <section class="card info-card"><h3>상태 기준</h3><ul><li>WATCH: 돌파 전 관찰</li><li>TRIGGERED: 돌파 확인</li><li>RETEST: 돌파 후 재확인</li><li>COMPLETED / FAILED: 신규 진입 제외</li></ul></section>
+            <section class="card info-card"><h3>실전 점검 순서</h3><ol><li>시장 위험 상태 확인</li><li>점수와 신호 상태 확인</li><li>진입·손절·목표가로 손익비 확인</li><li>공시와 실적을 별도로 확인</li></ol></section>
+          </div>
+          <div class="notice"><span>!</span><span>이 도구는 교육·정보 제공 목적의 정량 검토 보조 도구입니다. 실시간 시세, 주문, 투자자문을 제공하지 않으며 과거 성과는 미래 수익을 보장하지 않습니다.</span></div>
+        </section>
+
+        <footer class="footer"><span>K-Pattern Radar · 무료 공개용 단일 파일 앱</span><span>데이터는 기기 밖으로 전송되지 않습니다 · 자동 주문 없음</span></footer>
+      </div>
+    </main>
+  </div>
+
+  <nav class="mobile-nav" aria-label="모바일 메뉴">
+    <button class="active" data-view="home"><span>⌂</span>시장</button>
+    <button data-view="signals"><span>◎</span>종목</button>
+    <button data-view="leaders"><span>↗</span>리더</button>
+    <button data-view="performance"><span>▥</span>성과</button>
+    <button data-view="data"><span>⇧</span>데이터</button>
+  </nav>
+
+  <dialog id="detail-dialog">
+    <div class="modal-head"><div><h3 id="modal-name"></h3><p id="modal-meta"></p></div><button class="close" aria-label="닫기">×</button></div>
+    <div class="modal-body" id="modal-body"></div>
+  </dialog>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+  (() => {
+    "use strict";
+    const LABEL = {
+      DOUBLE_BOTTOM:"이중 바닥", DOUBLE_TOP:"이중 천장", INVERSE_HEAD_SHOULDERS:"역헤드앤숄더",
+      HEAD_SHOULDERS:"헤드앤숄더", ASCENDING_TRIANGLE:"상승 삼각형", DESCENDING_TRIANGLE:"하락 삼각형",
+      FALLING_WEDGE:"하락 쐐기", RISING_WEDGE:"상승 쐐기", BULLISH_FLAG:"강세 깃발",
+      BULLISH_PENNANT:"강세 페넌트", BULLISH_RECTANGLE:"강세 직사각형", NONE:"패턴 없음",
+      WATCH:"관찰", TRIGGERED:"돌파 확인", RETEST:"리테스트", COMPLETED:"목표 도달", FAILED:"무효화",
+      FORMING:"형성 중", RISK_ON:"위험 선호", NEUTRAL:"중립", RISK_OFF:"위험 회피"
+    };
+    const sample = {
+      asOf:"2026-07-27", mode:"sample",
+      markets:[
+        {market:"KOSPI",regime:"NEUTRAL",close:3908.56,return20:-.0347,return60:.1693,series:[3820,3865,3910,3978,4052,4016,3964,3938,3909]},
+        {market:"KOSDAQ",regime:"NEUTRAL",close:869.81,return20:-.1075,return60:.0583,series:[914,926,921,907,899,888,881,876,870]}
+      ],
+      signals:[
+        {code:"068270",name:"셀트리온",market:"KOSPI",sector:"바이오",pattern:"DOUBLE_BOTTOM",direction:"BULLISH",status:"COMPLETED",score:78.95,grade:"A",close:239165,entry:203033,stop:190852,target:212869,rr:.81,volumeRatio:1.15,sectorRS:.168,stockRS:.066,trend:15,volumeScore:17.73,patternScore:19.2,reasons:["이중 바닥 형태와 넥라인 돌파 확인","MA20 > MA60 > MA120","섹터 상대강도 양호"],risks:["이미 1차 목표가를 지나 추격 진입 부적합","1차 손익비 1.5 미만","시장 환경 중립"]},
+        {code:"068270",name:"셀트리온",market:"KOSPI",sector:"바이오",pattern:"DOUBLE_TOP",direction:"BEARISH",status:"FAILED",score:65.87,grade:"B",close:239165,entry:163069,stop:193726,target:136868,rr:.85,volumeRatio:1.15,sectorRS:.168,stockRS:.066,trend:0,volumeScore:17.73,patternScore:21,reasons:["과거 이중 천장 후보 구간","섹터 상대강도 양호"],risks:["패턴 무효화","현재가와 계획 진입가 괴리 과다","하락형 신호"]},
+        {code:"000660",name:"SK하이닉스",market:"KOSPI",sector:"반도체",pattern:"DOUBLE_BOTTOM",direction:"BULLISH",status:"WATCH",score:55.58,grade:"C",close:240197,entry:241990,stop:219886,target:256237,rr:.64,volumeRatio:.96,sectorRS:-.054,stockRS:-.015,trend:15,volumeScore:14.77,patternScore:19.2,reasons:["이중 바닥 후보 형태","이동평균 정배열"],risks:["거래량 확인 부족","종목·섹터 상대강도 음수","1차 손익비 1.5 미만"]}
+      ],
+      leaders:[
+        {code:"035420",name:"NAVER",market:"KOSPI",sector:"인터넷",rank:1,type:"LEADER",score:94,stockRS:.199},
+        {code:"000660",name:"SK하이닉스",market:"KOSPI",sector:"반도체",rank:1,type:"LEADER",score:81.7,stockRS:-.015},
+        {code:"196170",name:"알테오젠",market:"KOSDAQ",sector:"바이오",rank:1,type:"LEADER",score:80.9,stockRS:.121},
+        {code:"005930",name:"삼성전자",market:"KOSPI",sector:"반도체",rank:2,type:"RUNNER_UP",score:69.4,stockRS:-.027},
+        {code:"068270",name:"셀트리온",market:"KOSPI",sector:"바이오",rank:2,type:"RUNNER_UP",score:68.6,stockRS:.066},
+        {code:"035720",name:"카카오",market:"KOSPI",sector:"인터넷",rank:2,type:"RUNNER_UP",score:56.3,stockRS:-.031}
+      ],
+      performance:{total:28,entered:6,winRate:.1667,averageReturn:-.0239,maxDrawdown:-.1713,patterns:[
+        {name:"강세 깃발",value:-.0369},{name:"강세 페넌트",value:-.0367},{name:"이중 바닥",value:.0408},{name:"이중 천장",value:0},{name:"상승 쐐기",value:0}
+      ]}
+    };
+    let state = JSON.parse(JSON.stringify(sample));
+    const $ = s => document.querySelector(s);
+    const $$ = s => [...document.querySelectorAll(s)];
+    const won = n => Number.isFinite(+n) ? Math.round(+n).toLocaleString("ko-KR")+"원" : "—";
+    const pct = n => Number.isFinite(+n) ? ((+n>0?"+":"")+(+n*100).toFixed(1)+"%") : "—";
+    const num = (v,f=0) => { const n=Number(String(v??"").replaceAll(",","")); return Number.isFinite(n)?n:f; };
+    const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    const grade = score => score>=85?"S":score>=75?"A":score>=65?"B":"C";
+    const opinion = s => {
+      if(["FAILED","COMPLETED"].includes(s.status)||s.direction==="BEARISH") return {key:"exclude",label:"제외",reason:s.status==="COMPLETED"?"이미 완료된 신호로 추격 진입을 피하세요.":"무효화 또는 하락형 신호입니다."};
+      if(s.score>=75 && ["TRIGGERED","RETEST"].includes(s.status) && s.rr>=1.5) return {key:"review",label:"검토 가능",reason:"핵심 정량 조건을 통과했습니다. 공시·실적 확인 후 분할 접근을 검토하세요."};
+      return {key:"wait",label:"관망",reason:"점수, 신호 확인 또는 손익비 조건이 아직 부족합니다."};
+    };
+    const spark = (vals,id) => {
+      const w=150,h=62,min=Math.min(...vals),max=Math.max(...vals),range=max-min||1;
+      const pts=vals.map((v,i)=>`${(i/(vals.length-1)*w).toFixed(1)},${(h-6-(v-min)/range*(h-16)).toFixed(1)}`).join(" ");
+      const area=`0,${h} ${pts} ${w},${h}`;
+      return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-label="최근 흐름 미니 차트"><defs><linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#3276e8" stop-opacity=".2"/><stop offset="1" stop-color="#3276e8" stop-opacity="0"/></linearGradient></defs><polygon points="${area}" fill="url(#g${id})"/><polyline points="${pts}" fill="none" stroke="#3276e8" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>`;
+    };
+    function setView(view){
+      $$(".view").forEach(x=>x.classList.toggle("active",x.id===`view-${view}`));
+      $$("[data-view]").forEach(x=>x.classList.toggle("active",x.dataset.view===view));
+      const titles={home:"시장 대시보드",signals:"종목별 투자 검토",leaders:"섹터 리더",performance:"성과 점검",data:"내 데이터 분석",guide:"판단 기준"};
+      $("#page-title").textContent=titles[view]||titles.home;
+      window.scrollTo({top:0,behavior:"smooth"});
+    }
+    function render(){
+      $("#as-of").textContent=`기준일 ${String(state.asOf).replaceAll("-",".")}`;
+      $("#mode-badge").textContent=state.mode==="sample"?"예시 데이터":"사용자 데이터";
+      renderMarkets(); renderSignals(); renderLeaders(); renderPerformance();
+    }
+    function renderMarkets(){
+      $("#market-cards").innerHTML=state.markets.map((m,i)=>`<article class="market-card">
+        <div><div class="market-title"><strong>${esc(m.market)}</strong><span class="regime ${esc(m.regime)}">${LABEL[m.regime]||m.regime}</span></div>
+        <div class="market-value">${num(m.close).toLocaleString("ko-KR",{maximumFractionDigits:2})}</div>
+        <div class="market-meta"><span>20일 <b class="${m.return20>=0?"up":"down"}">${pct(m.return20)}</b></span><span>60일 <b class="${m.return60>=0?"up":"down"}">${pct(m.return60)}</b></span></div></div>
+        ${spark(m.series?.length?m.series:[m.close*.97,m.close*.99,m.close],i)}</article>`).join("");
+      const valid=state.signals.filter(s=>opinion(s).key==="review").length;
+      const failed=state.signals.filter(s=>opinion(s).key==="exclude").length;
+      const avg=state.signals.length?state.signals.reduce((a,s)=>a+s.score,0)/state.signals.length:0;
+      const riskOff=state.markets.some(m=>m.regime==="RISK_OFF");
+      const verdict=riskOff?"시장 위험회피 — 신규 진입 보류":valid?"조건 충족 후보가 있습니다":"확정 신호 부족 — 관망 우선";
+      $("#market-decision").innerHTML=`<div class="decision-copy"><div class="decision-icon">${valid?"✓":"!"}</div><div><small>오늘의 종합 판단</small><h3>${verdict}</h3></div></div>
+        <div class="decision-stats"><div><span>검토 가능</span><strong>${valid}종목</strong></div><div><span>제외 신호</span><strong>${failed}건</strong></div><div><span>평균 점수</span><strong>${avg.toFixed(1)}</strong></div></div>`;
+    }
+    function signalRow(s){
+      const op=opinion(s);
+      return `<button class="signal-row" data-code="${esc(s.code)}" data-pattern="${esc(s.pattern)}">
+        <span class="stock-name"><span class="score-dot ${esc(s.grade)}">${esc(s.grade)}</span><span><strong>${esc(s.name)}</strong><small>${esc(s.code)} · ${esc(s.sector)}</small></span></span>
+        <span class="cell hide-mobile">${LABEL[s.pattern]||esc(s.pattern)}<small><span class="status-chip ${esc(s.status)}">${LABEL[s.status]||esc(s.status)}</span></small></span>
+        <span class="cell">${s.score.toFixed(1)}점<small>손익비 ${num(s.rr).toFixed(2)}</small></span>
+        <span class="cell hide-tablet"><span class="opinion-chip ${op.key}">${op.label}</span><small>${esc(s.market)}</small></span><span class="chev">›</span></button>`;
+    }
+    function renderSignals(){
+      const sorted=[...state.signals].sort((a,b)=>b.score-a.score);
+      $("#home-signals").innerHTML=sorted.slice(0,3).map(signalRow).join("")||`<div class="empty">분석 신호가 없습니다.</div>`;
+      const query=$("#search").value.trim().toLowerCase(), market=$("#market-filter").value, opKey=$("#opinion-filter").value;
+      const filtered=sorted.filter(s=>(!query||s.name.toLowerCase().includes(query)||s.code.includes(query))&&(!market||s.market===market)&&(!opKey||opinion(s).key===opKey));
+      $("#signal-table").innerHTML=filtered.map(s=>{const op=opinion(s);return `<tr data-code="${esc(s.code)}" data-pattern="${esc(s.pattern)}">
+        <td><strong>${esc(s.name)}</strong><small>${esc(s.code)}</small></td><td><strong>${esc(s.market)}</strong><small>${esc(s.sector)}</small></td>
+        <td><strong>${LABEL[s.pattern]||esc(s.pattern)}</strong><small>${LABEL[s.status]||esc(s.status)}</small></td><td><strong>${s.score.toFixed(1)} · ${esc(s.grade)}</strong><small>100점 기준</small></td>
+        <td><strong>${won(s.close)}</strong></td><td><strong>${num(s.rr).toFixed(2)}</strong><small>최소 1.50</small></td><td><span class="opinion-chip ${op.key}">${op.label}</span></td></tr>`}).join("");
+      $("#signal-empty").hidden=filtered.length>0;
+    }
+    function renderLeaders(){
+      const leaders=[...state.leaders].sort((a,b)=>b.score-a.score);
+      $("#home-leaders").innerHTML=leaders.slice(0,5).map((l,i)=>`<button class="leader-row" data-leader="${esc(l.code)}"><span class="rank ${i<3?"top":""}">${i+1}</span><span><strong>${esc(l.name)}</strong><small>${esc(l.sector)} · ${l.type==="LEADER"?"주도주":"차순위"}</small></span><span class="leader-score"><strong>${l.score.toFixed(1)}</strong><small class="${l.stockRS>=0?"up":"down"}">RS ${pct(l.stockRS)}</small></span></button>`).join("");
+      $("#leader-table").innerHTML=leaders.map((l,i)=>{
+        const sig=state.signals.find(s=>s.code===l.code);
+        return `<tr data-leader="${esc(l.code)}"><td><span class="rank ${i<3?"top":""}">${i+1}</span></td><td><strong>${esc(l.name)}</strong><small>${esc(l.code)} · ${esc(l.market)}</small></td><td>${esc(l.sector)}</td><td>${l.type==="LEADER"?"주도주":"차순위"}</td><td class="${l.stockRS>=0?"up":"down"}"><strong>${pct(l.stockRS)}</strong></td><td><strong>${l.score.toFixed(1)}</strong></td><td>${sig?`<span class="status-chip ${esc(sig.status)}">${LABEL[sig.status]||sig.status}</span>`:"관찰 신호 없음"}</td></tr>`;
+      }).join("");
+    }
+    function renderPerformance(){
+      const p=state.performance;
+      const items=[["전체 신호",p.total+"건","백테스트 후보"],["실제 진입",p.entered+"건","진입 조건 충족"],["승률",pct(p.winRate),"표본 제한"],["평균 수익률",pct(p.averageReturn),"비용 반영"]];
+      $("#metrics").innerHTML=items.map((x,i)=>`<article class="card metric"><span>${x[0]}</span><strong class="${i>1?(num(i===2?p.winRate:p.averageReturn)>=0?"up":"down"):""}">${x[1]}</strong><small>${x[2]}</small></article>`).join("");
+      $("#pattern-bars").innerHTML=p.patterns.map(x=>{const width=Math.min(100,Math.abs(x.value)*1400);return `<div class="bar-row"><strong>${esc(x.name)}</strong><div class="bar-track"><div class="bar-fill ${x.value<0?"negative":""}" style="width:${width}%"></div></div><span class="${x.value>=0?"up":"down"}">${pct(x.value)}</span></div>`}).join("");
+    }
+    function openSignal(code,pattern){
+      const s=state.signals.find(x=>x.code===code&&(!pattern||x.pattern===pattern)); if(!s)return;
+      const op=opinion(s);
+      $("#modal-name").textContent=s.name;
+      $("#modal-meta").textContent=`${s.code} · ${s.market} · ${s.sector} · ${LABEL[s.pattern]||s.pattern}`;
+      const pieces=[
+        ["추세",num(s.trend),25],["종목 상대강도",s.stockRS>=.1?20:s.stockRS>=.03?14:s.stockRS>=0?8:2,20],
+        ["섹터 상대강도",s.sectorRS>=.08?15:s.sectorRS>=.02?11:s.sectorRS>=0?7:2,15],
+        ["거래량",Math.min(15,num(s.volumeScore,Math.max(3,Math.min(15,s.volumeRatio*8)))),15],
+        ["패턴",Math.min(15,num(s.patternScore,10)),15],["손익비",s.rr>=2?10:s.rr>=1.5?8:s.rr>=1?4:2,10]
+      ];
+      $("#modal-body").innerHTML=`<div class="opinion ${op.key}"><div><small>정량 검토 의견</small><strong>${op.label}</strong></div><span style="font-size:11px;max-width:410px">${esc(op.reason)}</span></div>
+        <div class="levels"><div class="level"><span>현재가</span><strong>${won(s.close)}</strong></div><div class="level"><span>보수적 진입</span><strong>${won(s.entry)}</strong></div><div class="level"><span>손절 기준</span><strong class="down">${won(s.stop)}</strong></div><div class="level"><span>1차 목표</span><strong class="up">${won(s.target)}</strong></div></div>
+        <div class="score-break"><div class="card-head" style="margin:0"><div><h3>점수 구성</h3><p>총점 ${s.score.toFixed(1)}점 · ${s.grade}등급 · 손익비 ${num(s.rr).toFixed(2)}</p></div></div>
+        ${pieces.map(x=>`<div class="score-line"><span>${x[0]}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,x[1]/x[2]*100)}%"></div></div><b>${num(x[1]).toFixed(1)}</b></div>`).join("")}</div>
+        <div class="bullet-columns"><div class="bullet-box"><h4>확인된 근거</h4><ul>${(s.reasons||["입력 데이터 기반 자동 산출"]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+        <div class="bullet-box"><h4>주의할 위험</h4><ul>${(s.risks||["공시·실적·수급을 별도로 확인하세요."]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></div>
+        <div class="notice"><span>!</span><span>표시 가격은 입력 데이터 기준이며 실시간 호가가 아닙니다. 주문 전 최신 시세와 공시를 다시 확인하세요.</span></div>`;
+      $("#detail-dialog").showModal();
+    }
+    function openLeader(code){
+      const l=state.leaders.find(x=>x.code===code), s=state.signals.find(x=>x.code===code);
+      if(s){openSignal(s.code,s.pattern);return}
+      $("#modal-name").textContent=l.name; $("#modal-meta").textContent=`${l.code} · ${l.market} · ${l.sector}`;
+      $("#modal-body").innerHTML=`<div class="opinion wait"><div><small>정량 검토 의견</small><strong>관심 목록</strong></div><span style="font-size:11px;max-width:410px">주도주 점수는 높지만 확인된 기술적 진입 신호가 없습니다.</span></div>
+      <div class="levels"><div class="level"><span>주도주 순위</span><strong>${l.rank}위</strong></div><div class="level"><span>주도주 점수</span><strong>${l.score.toFixed(1)}</strong></div><div class="level"><span>종목 상대강도</span><strong class="${l.stockRS>=0?"up":"down"}">${pct(l.stockRS)}</strong></div><div class="level"><span>확인 신호</span><strong>없음</strong></div></div>
+      <div class="notice"><span>!</span><span>좋은 종목과 좋은 진입 시점은 다릅니다. 패턴과 손절 기준이 확인될 때까지 관심 목록으로만 관리하세요.</span></div>`;
+      $("#detail-dialog").showModal();
+    }
+    function parseCSV(text){
+      const rows=[]; let row=[],cell="",quote=false;
+      for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1]; if(c==='"'&&quote&&n==='"'){cell+='"';i++}else if(c==='"'){quote=!quote}else if(c===","&&!quote){row.push(cell.trim());cell=""}else if((c==="\n"||c==="\r")&&!quote){if(c==="\r"&&n==="\n")i++;row.push(cell.trim());if(row.some(Boolean))rows.push(row);row=[];cell=""}else cell+=c}
+      row.push(cell.trim());if(row.some(Boolean))rows.push(row);
+      if(rows.length<2)throw new Error("데이터 행이 없습니다.");
+      const headers=rows[0].map(x=>x.replace(/^\uFEFF/,"").trim());
+      return rows.slice(1).map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]??""])));
+    }
+    function analyzeRow(r){
+      const close=num(r.close),ma20=num(r.ma20,close),ma60=num(r.ma60,ma20),ma120=num(r.ma120,ma60);
+      const stockRS=num(r.stockRS),sectorRS=num(r.sectorRS),volumeRatio=num(r.volumeRatio,1),pattern=(r.pattern||"NONE").toUpperCase(),status=(r.status||"FORMING").toUpperCase();
+      const trend=close>ma20&&ma20>ma60&&ma60>ma120?25:close>ma20&&ma20>ma60?18:close>ma20?11:4;
+      const rs=stockRS>=.1?20:stockRS>=.03?14:stockRS>=0?8:2;
+      const sector=sectorRS>=.08?15:sectorRS>=.02?11:sectorRS>=0?7:2;
+      const volume=volumeRatio>=2?15:volumeRatio>=1.5?12:volumeRatio>=1.2?9:volumeRatio>=1?6:3;
+      const patternScore=pattern==="NONE"?3:status==="TRIGGERED"||status==="RETEST"?15:status==="WATCH"?11:status==="FAILED"?0:8;
+      const entry=num(r.entry,close),stop=num(r.stop),target=num(r.target),risk=Math.abs(entry-stop),reward=Math.abs(target-entry),rr=risk>0?reward/risk:0;
+      const riskScore=rr>=2?10:rr>=1.5?8:rr>=1?4:2; const score=Math.min(100,trend+rs+sector+volume+patternScore+riskScore);
+      return {code:String(r.code||r.ticker||"").padStart(6,"0"),name:r.name||"이름 없음",market:(r.market||"KOSPI").toUpperCase(),sector:r.sector||"미분류",close,pattern,direction:(r.direction||(/TOP|HEAD_SHOULDERS|DESCENDING|RISING_WEDGE/.test(pattern)?"BEARISH":"BULLISH")).toUpperCase(),status,entry,stop,target,rr,volumeRatio,sectorRS,stockRS,trend,volumeScore:volume,patternScore,score,grade:grade(score),reasons:["입력값 기반 자동 점수 계산","이동평균과 상대강도 조건 반영"],risks:["실시간 시세·공시 별도 확인 필요",rr<1.5?"손익비 1.5 미만":"표본 외 위험요인 확인 필요"]};
+    }
+    function loadRows(rows){
+      if(!Array.isArray(rows)||!rows.length)throw new Error("분석할 행이 없습니다.");
+      const signals=rows.map(analyzeRow).filter(x=>x.code&&x.name&&x.close>0);
+      if(!signals.length)throw new Error("code, name, market, close 열을 확인해주세요.");
+      state.signals=signals;
+      state.leaders=signals.map((s,i)=>({code:s.code,name:s.name,market:s.market,sector:s.sector,rank:i+1,type:i<Math.ceil(signals.length/2)?"LEADER":"RUNNER_UP",score:Math.min(100,s.score*.7+(s.stockRS>=0?20:5)+(s.sectorRS>=0?10:3)),stockRS:s.stockRS})).sort((a,b)=>b.score-a.score).map((x,i)=>({...x,rank:i+1}));
+      const markets=["KOSPI","KOSDAQ"].map(m=>{const xs=signals.filter(s=>s.market===m), avg=xs.length?xs.reduce((a,s)=>a+s.stockRS,0)/xs.length:0;return {market:m,regime:avg>.05?"RISK_ON":avg<-.05?"RISK_OFF":"NEUTRAL",close:0,return20:avg,return60:xs.length?xs.reduce((a,s)=>a+num(s.sectorRS),0)/xs.length:0,series:[0,0,0]}}).filter(x=>signals.some(s=>s.market===x.market));
+      state.markets=markets.length?markets:sample.markets;
+      state.asOf=new Date().toISOString().slice(0,10);state.mode="user";
+      $("#search").value="";$("#market-filter").value="";$("#opinion-filter").value="";
+      render();setView("signals");toast(`${signals.length}개 종목을 분석했습니다.`);
+    }
+    async function handleFile(file){
+      if(!file)return;
+      try{const text=await file.text();const raw=file.name.toLowerCase().endsWith(".json")?JSON.parse(text):parseCSV(text);const rows=Array.isArray(raw)?raw:(raw.rows||raw.signals);loadRows(rows)}
+      catch(e){toast(`불러오기 실패: ${e.message}`)}
+    }
+    function download(name,text,type="text/plain;charset=utf-8"){
+      const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+    }
+    function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),2600)}
+    document.addEventListener("click",e=>{
+      const go=e.target.closest("[data-go]");if(go)setView(go.dataset.go);
+      const nav=e.target.closest("[data-view]");if(nav)setView(nav.dataset.view);
+      const sig=e.target.closest("[data-code]");if(sig)openSignal(sig.dataset.code,sig.dataset.pattern);
+      const lead=e.target.closest("[data-leader]");if(lead)openLeader(lead.dataset.leader);
+    });
+    ["search","market-filter","opinion-filter"].forEach(id=>$("#"+id).addEventListener(id==="search"?"input":"change",renderSignals));
+    $("#detail-dialog .close").addEventListener("click",()=>$("#detail-dialog").close());
+    $("#detail-dialog").addEventListener("click",e=>{if(e.target===$("#detail-dialog"))$("#detail-dialog").close()});
+    $("#file-input").addEventListener("change",e=>handleFile(e.target.files[0]));
+    const dz=$("#drop-zone");
+    ["dragenter","dragover"].forEach(x=>dz.addEventListener(x,e=>{e.preventDefault();dz.classList.add("drag")}));
+    ["dragleave","drop"].forEach(x=>dz.addEventListener(x,e=>{e.preventDefault();dz.classList.remove("drag")}));
+    dz.addEventListener("drop",e=>handleFile(e.dataTransfer.files[0]));
+    $("#download-template").addEventListener("click",()=>download("k-pattern-template.csv","code,name,market,sector,close,ma20,ma60,ma120,return20,return60,volumeRatio,sectorRS,stockRS,pattern,status,entry,stop,target\n005930,삼성전자,KOSPI,반도체,70000,68500,67000,65000,0.04,0.12,1.6,0.08,0.10,ASCENDING_TRIANGLE,WATCH,70500,66500,78000","text/csv;charset=utf-8"));
+    $("#restore-sample").addEventListener("click",()=>{state=JSON.parse(JSON.stringify(sample));render();setView("home");toast("예시 데이터를 복원했습니다.")});
+    $("#export-csv").addEventListener("click",()=>{const head="종목코드,종목명,시장,업종,패턴,상태,점수,등급,현재가,진입가,손절가,목표가,손익비,검토의견";const rows=state.signals.map(s=>[s.code,s.name,s.market,s.sector,LABEL[s.pattern]||s.pattern,LABEL[s.status]||s.status,s.score.toFixed(1),s.grade,s.close,s.entry,s.stop,s.target,num(s.rr).toFixed(2),opinion(s).label].map(v=>`"${String(v??"").replaceAll('"','""')}"`).join(","));download(`K-Pattern-검토표-${state.asOf}.csv`,[head,...rows].join("\n"),"text/csv;charset=utf-8")});
+    render();
+  })();
+  </script>
+</body>
+</html>
