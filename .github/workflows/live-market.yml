@@ -1,0 +1,48 @@
+name: Refresh market data
+
+on:
+  schedule:
+    - cron: '5,25,45 0-6 * * 1-5'
+    - cron: '50 6 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 필요한 패키지 설치
+        run: pip install --quiet requests
+
+      - name: 시세 수집과 지표 계산
+        run: python update_market.py
+
+      - name: 결과 커밋
+        run: |
+          if [ -z "$(git status --porcelain live-data.json history.json)" ]; then
+            echo "바뀐 내용이 없어 커밋하지 않습니다."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add live-data.json history.json
+          git commit -m "시세 갱신 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M')"
+          for i in 1 2 3; do
+            git pull --rebase --autostash && git push && exit 0
+            sleep 5
+          done
+          echo "푸시에 실패했습니다." >&2
+          exit 1
