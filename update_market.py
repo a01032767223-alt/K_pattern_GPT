@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import random
 import sys
 import time
@@ -23,7 +24,8 @@ KST = timezone(timedelta(hours=9))
 ROOT = Path(__file__).resolve().parent
 LIVE_FILE = ROOT / "live-data.json"
 HISTORY_FILE = ROOT / "history.json"
-SCHEMA_VERSION = 4
+INTRADAY_FILE = ROOT / "intraday.json"
+SCHEMA_VERSION = 5
 HISTORY_KEEP_DAYS = 180
 
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
@@ -35,30 +37,63 @@ INDEXES = [
 
 FX = {"name": "원/달러 환율", "yahoo": "KRW=X"}
 
+# 전일 미국 시장 참고 지표. 3대 지수 + 공포지수 + 국채금리 + 업종 대표 ETF.
+US_INDEXES = [
+    {"market": "SPX", "name": "S&P 500", "yahoo": "^GSPC", "stooq": "^spx"},
+    {"market": "NASDAQ", "name": "나스닥종합", "yahoo": "^IXIC", "stooq": "^ndq"},
+    {"market": "DOW", "name": "다우존스", "yahoo": "^DJI", "stooq": "^dji"},
+]
+US_VIX = {"name": "VIX 변동성지수", "yahoo": "^VIX", "stooq": "^vix"}
+US_YIELD10Y = {"name": "美 10년물 국채금리", "yahoo": "^TNX"}
+US_SECTORS = [
+    {"name": "반도체(SMH)", "yahoo": "SMH", "stooq": "smh.us"},
+    {"name": "금융", "yahoo": "XLF", "stooq": "xlf.us"},
+    {"name": "에너지", "yahoo": "XLE", "stooq": "xle.us"},
+    {"name": "헬스케어", "yahoo": "XLV", "stooq": "xlv.us"},
+    {"name": "소비재", "yahoo": "XLY", "stooq": "xly.us"},
+    {"name": "커뮤니케이션", "yahoo": "XLC", "stooq": "xlc.us"},
+]
+
 # 분석 대상 40개 종목(코스피 20 · 코스닥 20). 종목을 바꾸려면 이 목록만 수정하면 된다.
 UNIVERSE = [
     # --- KOSPI 20 ---
     {"code": "005930", "name": "삼성전자", "market": "KOSPI", "sector": "반도체"},
     {"code": "000660", "name": "SK하이닉스", "market": "KOSPI", "sector": "반도체"},
+    {"code": "000990", "name": "DB하이텍", "market": "KOSPI", "sector": "반도체"},
     {"code": "373220", "name": "LG에너지솔루션", "market": "KOSPI", "sector": "2차전지"},
     {"code": "006400", "name": "삼성SDI", "market": "KOSPI", "sector": "2차전지"},
+    {"code": "003670", "name": "포스코퓨처엠", "market": "KOSPI", "sector": "2차전지"},
     {"code": "207940", "name": "삼성바이오로직스", "market": "KOSPI", "sector": "바이오"},
     {"code": "068270", "name": "셀트리온", "market": "KOSPI", "sector": "바이오"},
+    {"code": "000100", "name": "유한양행", "market": "KOSPI", "sector": "바이오"},
     {"code": "005380", "name": "현대차", "market": "KOSPI", "sector": "자동차"},
     {"code": "000270", "name": "기아", "market": "KOSPI", "sector": "자동차"},
+    {"code": "012330", "name": "현대모비스", "market": "KOSPI", "sector": "자동차"},
     {"code": "105560", "name": "KB금융", "market": "KOSPI", "sector": "금융"},
     {"code": "055550", "name": "신한지주", "market": "KOSPI", "sector": "금융"},
+    {"code": "086790", "name": "하나금융지주", "market": "KOSPI", "sector": "금융"},
     {"code": "035420", "name": "NAVER", "market": "KOSPI", "sector": "인터넷"},
     {"code": "035720", "name": "카카오", "market": "KOSPI", "sector": "인터넷"},
+    {"code": "377300", "name": "카카오페이", "market": "KOSPI", "sector": "인터넷"},
     {"code": "051910", "name": "LG화학", "market": "KOSPI", "sector": "화학·에너지"},
     {"code": "096770", "name": "SK이노베이션", "market": "KOSPI", "sector": "화학·에너지"},
+    {"code": "010950", "name": "S-Oil", "market": "KOSPI", "sector": "화학·에너지"},
     {"code": "012450", "name": "한화에어로스페이스", "market": "KOSPI", "sector": "방산"},
+    {"code": "064350", "name": "현대로템", "market": "KOSPI", "sector": "방산"},
+    {"code": "079550", "name": "LIG넥스원", "market": "KOSPI", "sector": "방산"},
     {"code": "042660", "name": "한화오션", "market": "KOSPI", "sector": "조선"},
     {"code": "010140", "name": "삼성중공업", "market": "KOSPI", "sector": "조선"},
+    {"code": "329180", "name": "HD현대중공업", "market": "KOSPI", "sector": "조선"},
     {"code": "034020", "name": "두산에너빌리티", "market": "KOSPI", "sector": "원자력·발전"},
+    {"code": "051600", "name": "한전KPS", "market": "KOSPI", "sector": "원자력·발전"},
+    {"code": "052690", "name": "한전기술", "market": "KOSPI", "sector": "원자력·발전"},
     {"code": "015760", "name": "한국전력", "market": "KOSPI", "sector": "유틸리티"},
+    {"code": "036460", "name": "한국가스공사", "market": "KOSPI", "sector": "유틸리티"},
+    {"code": "071320", "name": "한국지역난방공사", "market": "KOSPI", "sector": "유틸리티"},
     {"code": "003550", "name": "LG", "market": "KOSPI", "sector": "지주"},
-    # --- KOSDAQ 20 ---
+    {"code": "028260", "name": "삼성물산", "market": "KOSPI", "sector": "지주"},
+    {"code": "034730", "name": "SK", "market": "KOSPI", "sector": "지주"},
+    # --- KOSDAQ (업종별 3개 이상) ---
     {"code": "247540", "name": "에코프로비엠", "market": "KOSDAQ", "sector": "2차전지"},
     {"code": "086520", "name": "에코프로", "market": "KOSDAQ", "sector": "2차전지"},
     {"code": "348370", "name": "엔켐", "market": "KOSDAQ", "sector": "2차전지"},
@@ -79,6 +114,7 @@ UNIVERSE = [
     {"code": "122870", "name": "와이지엔터테인먼트", "market": "KOSDAQ", "sector": "엔터테인먼트"},
     {"code": "263750", "name": "펄어비스", "market": "KOSDAQ", "sector": "게임"},
     {"code": "293490", "name": "카카오게임즈", "market": "KOSDAQ", "sector": "게임"},
+    {"code": "078340", "name": "컴투스", "market": "KOSDAQ", "sector": "게임"},
 ]
 
 session = requests.Session()
@@ -102,6 +138,38 @@ def _clean(bars: list[dict]) -> list[dict]:
     out = [b for b in bars if b.get("close")]
     out.sort(key=lambda b: b["date"])
     return out
+
+
+def from_yahoo_intraday(symbol: str) -> list[dict]:
+    """최근 약 5거래일의 60분봉. 진입구간·손절·목표선을 겹쳐 그리는 시간봉 차트용이다."""
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+    res = session.get(url, params={"range": "5d", "interval": "60m"}, timeout=15)
+    res.raise_for_status()
+    result = (res.json().get("chart") or {}).get("result") or []
+    if not result:
+        raise ValueError("빈 응답")
+    r = result[0]
+    q = (r.get("indicators", {}).get("quote") or [{}])[0]
+    stamps = r.get("timestamp") or []
+    bars = []
+    for i, ts in enumerate(stamps):
+        c = (q.get("close") or [None] * len(stamps))[i]
+        o = (q.get("open") or [None] * len(stamps))[i]
+        h = (q.get("high") or [None] * len(stamps))[i]
+        lo = (q.get("low") or [None] * len(stamps))[i]
+        if c is None:
+            continue
+        bars.append({
+            "t": datetime.fromtimestamp(ts, KST).isoformat(),
+            "o": round(o, 2) if o else round(c, 2),
+            "h": round(h, 2) if h else round(c, 2),
+            "l": round(lo, 2) if lo else round(c, 2),
+            "c": round(c, 2),
+        })
+    if len(bars) < 5:
+        raise ValueError(f"시간봉 부족({len(bars)}개)")
+    return bars
+
 
 
 def from_yahoo(symbol: str) -> dict | None:
@@ -178,8 +246,9 @@ def from_naver(symbol: str) -> dict | None:
     }
 
 
-def from_stooq(code: str) -> dict | None:
-    res = session.get(f"https://stooq.com/q/d/l/?s={code.lower()}.kr&i=d", timeout=15)
+def from_stooq_symbol(symbol: str) -> dict | None:
+    """Stooq CSV. symbol은 국가 접미사까지 포함한 전체 심볼(예: 005930.kr, smh.us, ^spx)."""
+    res = session.get(f"https://stooq.com/q/d/l/?s={symbol.lower()}&i=d", timeout=15)
     res.raise_for_status()
     lines = res.text.strip().splitlines()
     if len(lines) < 130 or not lines[0].lower().startswith("date"):
@@ -207,6 +276,10 @@ def from_stooq(code: str) -> dict | None:
     }
 
 
+def from_stooq(code: str) -> dict | None:
+    return from_stooq_symbol(f"{code}.kr")
+
+
 def fetch_index(label: str, meta: dict) -> dict | None:
     """지수는 네이버(symbol=KOSPI/KOSDAQ) → 야후 순으로 시도한다.
     GitHub Actions 서버 IP가 야후에 막히는 경우가 잦아 네이버를 먼저 쓴다."""
@@ -221,6 +294,14 @@ def fetch_stock(label: str, code: str, yahoo_symbol: str) -> dict | None:
         ("Stooq", lambda: from_stooq(code)),
         ("Yahoo", lambda: from_yahoo(yahoo_symbol)),
     ]
+    return _try_all(label, attempts)
+
+
+def fetch_us(label: str, yahoo_symbol: str, stooq_symbol: str | None = None) -> dict | None:
+    """미국 지수·ETF는 야후 → (있으면) Stooq 순으로 시도한다. 네이버는 해당 없음."""
+    attempts = [("Yahoo", lambda: from_yahoo(yahoo_symbol))]
+    if stooq_symbol:
+        attempts.append(("Stooq", lambda: from_stooq_symbol(stooq_symbol)))
     return _try_all(label, attempts)
 
 
@@ -357,9 +438,11 @@ def build_stock(meta: dict, raw: dict, market: dict) -> dict:
     ma_stop = (ma60 or 0) * 0.985
     # 60일선 바로 아래가 손절 자리로 더 가까우면 그쪽을 쓴다(손실 폭을 줄이기 위해서다).
     stop = round(max(atr_stop, ma_stop) if 0 < ma_stop < entry_low else atr_stop, 1)
-    target = round(entry_high * (1 + atr * 4.0), 1)
+    target1 = round(entry_high * (1 + atr * 4.0), 1)
+    # 2차 목표는 1차까지의 보상폭을 추세 지속을 가정해 1.8배로 늘린 확장 목표다.
+    target2 = round(entry_high + (target1 - entry_high) * 1.8, 1)
     risk = max(entry_high - stop, 1e-9)
-    reward = max(target - entry_high, 0.0)
+    reward = max(target1 - entry_high, 0.0)
     rr = round(reward / risk, 2)
 
     # 점수 (합계 100점)
@@ -396,7 +479,7 @@ def build_stock(meta: dict, raw: dict, market: dict) -> dict:
     if ma20 and ma60 and price > ma20 > ma60:
         reasons.append("현재가가 20일선과 60일선 위에 있어 중기 추세가 살아 있습니다.")
     if rel > 0:
-        reasons.append(f"최근 20일 수익률이 {market['market']} 지수보다 {rel * 100:.1f}%p 앞섭니다.")
+        reasons.append(f"최근 20일 수익률이 {market['name']} 지수보다 {rel * 100:.1f}%p 앞섭니다.")
     if vol_ratio >= 1.3:
         reasons.append(f"거래량이 평소의 {vol_ratio:.1f}배로 늘며 관심이 붙었습니다.")
     if pattern == "BREAKOUT":
@@ -411,7 +494,7 @@ def build_stock(meta: dict, raw: dict, market: dict) -> dict:
     if r14 >= 70:
         risks.append(f"RSI가 {r14}로 과열 구간이라 단기 조정이 나올 수 있습니다.")
     if market["regime"] == "RISK_OFF":
-        risks.append(f"{market['market']} 지수가 주요 이동평균선 아래여서 시장 전체가 불리합니다.")
+        risks.append(f"{market['name']} 지수가 주요 이동평균선 아래여서 시장 전체가 불리합니다.")
     if rr < 1.5:
         risks.append(f"손익비가 {rr}로 낮아, 맞아도 얻는 것이 적고 틀리면 손실이 큽니다.")
     if ma60 and price < ma60:
@@ -428,6 +511,7 @@ def build_stock(meta: dict, raw: dict, market: dict) -> dict:
         "최근 공시와 실적 발표 일정을 확인하세요.",
         f"현재가가 진입 구간({entry_low:,.0f}~{entry_high:,.0f})에 들어와 있는지 보세요.",
         f"손절 기준 {stop:,.0f}을 미리 정해두고 지킬 수 있는지 생각하세요.",
+        f"1차 목표 {target1:,.0f}에서 일부를 정리하고, 나머지는 2차 목표 {target2:,.0f}까지 지켜보는 방법도 흔히 씁니다.",
         f"52주 구간에서 {w52['position'] * 100:.0f}% 지점입니다. 고점·저점 부근이면 더 보수적으로 접근하세요.",
         "한 번에 전액이 아니라 나누어 접근하세요.",
     ]
@@ -471,7 +555,7 @@ def build_stock(meta: dict, raw: dict, market: dict) -> dict:
         "rsi14": r14, "return_20d": round(ret20, 6), "relative_strength": round(rel, 6),
         "volume_ratio": round(vol_ratio, 2), "pattern": pattern, "status": status,
         "week52": w52, "value_traded": round(value_traded, 0),
-        "entry_low": entry_low, "entry_high": entry_high, "stop": stop, "target": target,
+        "entry_low": entry_low, "entry_high": entry_high, "stop": stop, "target1": target1, "target2": target2,
         "risk_reward": rr, "score": score, "grade": grade, "components": components,
         "quote_time": raw["quote_time"], "provider": raw["provider"],
         "series": [round(c, 1) for c in closes[-30:]],
@@ -545,7 +629,7 @@ def summarize_history(history: dict) -> dict:
     }
 
 
-# ---------------------------------------------------------------- 샘플 생성
+# ---------------------------------------------------------------- 참고 지표 계산
 
 
 def fetch_fx(sample: bool) -> dict | None:
@@ -630,6 +714,167 @@ def signal_shift(today_stocks: list[dict], history: dict) -> dict | None:
     }
 
 
+# ---------------------------------------------------------------- 전일 미국 시장
+
+
+def build_us_market(sample: bool) -> dict | None:
+    """S&P500·나스닥·다우·VIX·10년물 금리·업종 ETF를 모아 전일 미국 시장을 요약한다.
+    일부가 실패해도 얻은 것만으로 요약한다(코스피처럼 전체를 막지 않는다)."""
+    indices, sectors = [], []
+
+    for meta in US_INDEXES:
+        raw = sample_raw(hash(meta["market"]) % 7777, 5200.0) if sample else fetch_us(meta["name"], meta["yahoo"], meta.get("stooq"))
+        if raw:
+            indices.append(build_market(meta, raw))
+
+    vix = None
+    raw = sample_raw(9911, 16.0, -0.001) if sample else fetch_us(US_VIX["name"], US_VIX["yahoo"], US_VIX.get("stooq"))
+    if raw:
+        closes = [b["close"] for b in raw["bars"]]
+        prev = raw["prev_close"] or closes[-2]
+        vix = {"value": round(raw["price"], 2), "change_pct": round(raw["price"] / prev - 1, 6) if prev else 0.0,
+               "series": [round(c, 2) for c in closes[-30:]]}
+
+    yield10y = None
+    raw = sample_raw(7717, 42.0, 0.0) if sample else fetch_us(US_YIELD10Y["name"], US_YIELD10Y["yahoo"])
+    if raw:
+        closes = [b["close"] for b in raw["bars"]]
+        prev = raw["prev_close"] or closes[-2]
+        # ^TNX는 10배 스케일(예: 42.3 = 4.23%)로 제공된다.
+        yield10y = {"value": round(raw["price"] / 10, 3), "change_pp": round((raw["price"] - prev) / 10, 3) if prev else 0.0}
+
+    for meta in US_SECTORS:
+        raw = sample_raw(hash(meta["name"]) % 5555, 150.0) if sample else fetch_us(meta["name"], meta["yahoo"], meta.get("stooq"))
+        if raw:
+            closes = [b["close"] for b in raw["bars"]]
+            prev = raw["prev_close"] or closes[-2]
+            sectors.append({"name": meta["name"], "change_pct": round(raw["price"] / prev - 1, 6) if prev else 0.0})
+
+    if not indices:
+        return None
+    sectors.sort(key=lambda s: s["change_pct"], reverse=True)
+    return {
+        "indices": indices, "vix": vix, "yield10y": yield10y, "sectors": sectors,
+        "briefing": build_us_briefing(indices, vix, yield10y, sectors),
+        "quote_time": indices[0]["quote_time"],
+    }
+
+
+def build_us_briefing(indices: list[dict], vix: dict | None, yield10y: dict | None, sectors: list[dict]) -> dict:
+    """계산된 수치만으로 조건부 문장을 만든다. 생성형 AI가 즉석에서 쓴 글이 아니라
+    이 앱의 다른 판단과 같은 방식 — 규칙 기반 자동 요약이다."""
+    by_market = {i["market"]: i for i in indices}
+    spx, nasdaq, dow = by_market.get("SPX"), by_market.get("NASDAQ"), by_market.get("DOW")
+    up_count = sum(1 for i in indices if i["change_pct"] > 0)
+    direction = "상승" if up_count >= 2 else "하락" if up_count <= 1 and len(indices) >= 2 else "혼조"
+
+    points = []
+    if spx and nasdaq and dow:
+        points.append(
+            f"S&P500 {pct_kr(spx['change_pct'])}, 나스닥 {pct_kr(nasdaq['change_pct'])}, "
+            f"다우 {pct_kr(dow['change_pct'])}로 3대 지수가 {direction} 마감했습니다."
+        )
+    if nasdaq and spx:
+        gap = nasdaq["change_pct"] - spx["change_pct"]
+        if abs(gap) >= 0.003:
+            leader = "기술주 중심의 나스닥" if gap > 0 else "다우·S&P500 중심의 전통 업종"
+            points.append(f"{leader}이 상대적으로 더 강했습니다.")
+
+    if vix:
+        level = "안정" if vix["value"] < 15 else "보통" if vix["value"] < 25 else "불안"
+        points.append(f"VIX(공포지수)는 {vix['value']:.1f}로 {level} 구간입니다({pct_kr(vix['change_pct'])}).")
+
+    if yield10y:
+        if abs(yield10y["change_pp"]) >= 0.03:
+            note = "성장주·고밸류 종목에는 부담" if yield10y["change_pp"] > 0 else "성장주에는 우호적"
+            points.append(f"美 10년물 금리가 {yield10y['value']:.2f}%로 전일 대비 {yield10y['change_pp']:+.2f}%p 움직여 {note}일 수 있습니다.")
+        else:
+            points.append(f"美 10년물 금리는 {yield10y['value']:.2f}%로 큰 변화가 없었습니다.")
+
+    if sectors:
+        best, worst = sectors[0], sectors[-1]
+        points.append(
+            f"업종별로는 {josa(best['name'], '이', '가')} {pct_kr(best['change_pct'])}로 가장 강했고, "
+            f"{josa(worst['name'], '이', '가')} {pct_kr(worst['change_pct'])}로 가장 약했습니다."
+        )
+        semi = next((s for s in sectors if "반도체" in s["name"]), None)
+        if semi:
+            if semi["change_pct"] >= 0.01:
+                points.append("반도체 업종이 강했던 만큼, 삼성전자·SK하이닉스 등 코스피 반도체 대형주에 우호적인 분위기로 이어지는 경향이 있습니다.")
+            elif semi["change_pct"] <= -0.01:
+                points.append("반도체 업종이 약했던 만큼, 코스피 반도체 대형주도 출발이 무거울 수 있습니다.")
+
+    if direction == "상승" and (not vix or vix["value"] < 20):
+        headline = "미국 증시가 안정적으로 상승 마감했습니다"
+    elif direction == "하락" and vix and vix["value"] >= 20:
+        headline = "미국 증시가 하락하며 경계 심리가 커졌습니다"
+    elif direction == "하락":
+        headline = "미국 증시가 하락 마감했습니다"
+    else:
+        headline = "미국 증시는 방향을 정하지 못한 채 마감했습니다"
+
+    points.append("코스피·코스닥은 이 흐름과 다르게 움직일 때도 많습니다. 참고 배경으로만 활용하세요.")
+    return {"headline": headline, "points": points}
+
+
+def josa(word: str, with_batchim: str, without_batchim: str) -> str:
+    """받침 유무에 따라 조사를 붙인다. '반도체(SMH)'처럼 뒤에 괄호가 붙어도
+    마지막 한글 음절을 찾아 판단한다. 한글이 없으면 받침 없는 형태를 기본으로 쓴다."""
+    for ch in reversed(word):
+        code = ord(ch)
+        if 0xAC00 <= code <= 0xD7A3:
+            has_batchim = (code - 0xAC00) % 28 != 0
+            return word + (with_batchim if has_batchim else without_batchim)
+    return word + without_batchim
+
+
+def pct_kr(n: float) -> str:
+    return f"{'+' if n >= 0 else ''}{n * 100:.2f}%"
+
+
+# ---------------------------------------------------------------- 시간봉 차트(하루 2회)
+
+
+def is_intraday_run(now: datetime) -> bool:
+    """장 시작 전(08시대)과 장 마감 직후(15시 48분 이후)에만 시간봉을 갱신한다.
+    57종목 전체의 시간봉을 20분마다 받으면 API 부담과 차단 위험이 커지기 때문이다."""
+    return now.hour == 8 or (now.hour == 15 and now.minute >= 48)
+
+
+def build_intraday(stocks: list[dict], sample: bool, now: datetime) -> dict:
+    bars_by_code: dict[str, list[dict]] = {}
+    for s in stocks:
+        code, market = s["code"], s["market"]
+        if sample:
+            bars_by_code[code] = _sample_intraday(code, s["price"])
+            continue
+        yahoo_symbol = f"{code}.{'KS' if market == 'KOSPI' else 'KQ'}"
+        try:
+            bars_by_code[code] = from_yahoo_intraday(yahoo_symbol)
+        except Exception as exc:  # noqa: BLE001 - 시간봉 실패는 표 갱신을 막지 않는다
+            note_error(f"{s['name']} 시간봉", f"{type(exc).__name__}: {exc}")
+        time.sleep(0.25)
+    return {"schema_version": SCHEMA_VERSION, "generated_at": now.isoformat(), "sample": sample, "bars": bars_by_code}
+
+
+def _sample_intraday(code: str, last_price: float) -> list[dict]:
+    rnd = random.Random(hash(code) % 100000)
+    now = datetime.now(KST)
+    bars, price = [], last_price * 0.97
+    for day_back in range(4, -1, -1):
+        day = now - timedelta(days=day_back)
+        if day.weekday() >= 5:
+            continue
+        for hour in range(9, 16):
+            price *= 1 + rnd.gauss(0.0002, 0.006)
+            ts = day.replace(hour=hour, minute=0, second=0, microsecond=0)
+            bars.append({"t": ts.isoformat(), "o": round(price, 1), "h": round(price * 1.004, 1),
+                         "l": round(price * 0.996, 1), "c": round(price, 1)})
+    if bars:
+        bars[-1]["c"] = round(last_price, 1)
+    return bars
+
+
 
 # ---------------------------------------------------------------- 샘플 생성
 
@@ -663,9 +908,13 @@ def market_state(now: datetime) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample", action="store_true", help="네트워크 없이 샘플 데이터 생성")
+    parser.add_argument("--intraday", action="store_true",
+                        help="시각과 무관하게 시간봉을 강제로 갱신(수동 실행용)")
     args = parser.parse_args()
     now = datetime.now(KST)
     sample = args.sample
+    # 수동 실행(workflow_dispatch)일 때는 몇 시든 시간봉을 함께 갱신한다.
+    force_intraday = args.intraday or os.environ.get("KPR_FORCE_INTRADAY", "").strip().lower() in ("1", "true", "yes")
 
     markets, stocks = [], []
     for meta in INDEXES:
@@ -693,10 +942,18 @@ def main() -> int:
         return 1
 
     fx = fetch_fx(sample)
+    us_market = build_us_market(sample)
     history = update_history(stocks, now)
     shift = signal_shift(stocks, history)
     providers = sorted({s["provider"] for s in stocks} | {m["provider"] for m in markets})
     state = market_state(now)
+
+    do_intraday = sample or force_intraday or is_intraday_run(now)
+    if do_intraday:
+        intraday = build_intraday(stocks, sample, now)
+        INTRADAY_FILE.write_text(json.dumps(intraday, ensure_ascii=False, separators=(",", ":")), "utf-8")
+        got = sum(1 for v in intraday["bars"].values() if v)
+        print(f"시간봉 갱신: {got}/{len(stocks)}종목 → {INTRADAY_FILE.name}")
 
     payload = {
         "schema_version": SCHEMA_VERSION,
@@ -712,6 +969,7 @@ def main() -> int:
         "markets": markets,
         "stocks": stocks,
         "fx": fx,
+        "us_market": us_market,
         "sector_ranking": sector_ranking(stocks),
         "breadth": market_breadth(stocks),
         "value_leaders": value_leaders(stocks),

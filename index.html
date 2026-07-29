@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b1420">
-<meta name="description" content="국내 증시 코스피·코스닥 40종목의 추세와 위험을 초보자도 읽을 수 있게 설명하는 판단 보조 앱">
+<meta name="description" content="국내 증시 코스피·코스닥 57종목(업종별 3종목 이상)의 추세와 위험을 초보자도 읽을 수 있게 설명하는 판단 보조 앱">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -121,6 +121,16 @@ main{grid-column:2;min-width:0}
 .down{color:var(--down)}
 .market-explain{font-size:12px;color:var(--muted);margin-top:6px;font-family:var(--font-body)}
 .market-breadth{font-size:11px;color:var(--muted);margin-top:7px;font-family:var(--font-mono)}
+.us-brief{margin-bottom:16px}
+.us-headline{font-family:var(--font-display);font-size:16px;font-weight:600;margin:2px 0 9px;line-height:1.4}
+.us-points{margin:0;padding-left:18px;font-size:13px;color:#3f4550}
+.us-points li{margin-bottom:5px}
+.us-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+.us-chip{background:#f6f5ef;border-radius:10px;padding:8px 12px;font-size:12px;min-width:96px;flex:1 1 96px}
+.us-chip span{display:block;color:var(--muted);font-weight:600}
+.us-chip strong{display:block;font-family:var(--font-mono);font-size:14px;margin-top:2px}
+.us-sectors{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+.us-sector-tag{border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;font-family:var(--font-mono)}
 .spark{width:118px;height:56px}
 
 .decision{background:var(--ink);border-radius:var(--radius);color:#fff;padding:20px 22px;margin-bottom:16px;
@@ -257,9 +267,23 @@ dialog::backdrop{background:#0a121fa8}
 .position-fields input[type=number]{width:140px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:14px;font-family:var(--font-mono)}
 .position-fields span{font-size:12px;color:var(--muted)}
 .levels{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}
+.levels.levels-5{grid-template-columns:repeat(5,1fr)}
 .level{background:#f6f5ef;border-radius:11px;padding:12px}
 .level span{font-size:12px;color:var(--muted);font-weight:600}
 .level strong{display:block;font-size:14px;margin-top:3px;font-family:var(--font-mono)}
+.chart-box{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px}
+.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.chart-head h4{font-size:13px;margin:0;font-weight:600}
+.chart-asof{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+#intraday-chart{width:100%}
+#intraday-chart svg{width:100%;height:auto;display:block}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
+.chart-legend span{display:inline-flex;align-items:center;gap:5px}
+.lg{width:14px;height:0;border-top:2px solid;display:inline-block}
+.lg-entry{border-top-style:solid;border-color:var(--signal-ink);opacity:.6}
+.lg-stop{border-color:var(--down);border-top-style:dashed}
+.lg-t1{border-color:var(--up);border-top-style:solid}
+.lg-t2{border-color:var(--up);border-top-style:dashed}
 .w52-box{margin-top:14px;background:#f6f5ef;border-radius:12px;padding:14px}
 .w52-box .w52-head{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;font-family:var(--font-mono)}
 .w52-track{height:10px;background:#e5e2d5;border-radius:999px;position:relative}
@@ -312,6 +336,7 @@ dialog::backdrop{background:#0a121fa8}
   .metric-grid{grid-template-columns:1fr 1fr}
   .lesson-grid,.connection,.columns{grid-template-columns:1fr}
   .levels{grid-template-columns:1fr 1fr}
+  .levels.levels-5{grid-template-columns:1fr 1fr}
   .hist-row{grid-template-columns:80px 1fr 84px;font-size:12px}
   .hist-row .hide-mobile{display:none}
   .modal-head,.modal-body{padding-left:16px;padding-right:16px}
@@ -351,7 +376,7 @@ dialog::backdrop{background:#0a121fa8}
           <div>
             <p class="eyebrow">오늘의 시장</p>
             <h2>숫자보다 먼저, 지금의 의미를 읽으세요</h2>
-            <p class="sub">코스피·코스닥 40종목의 추세와 위험을 문장으로 설명합니다. 매수 추천이 아니라 무엇을 더 확인해야 하는지 알려주는 도구입니다.</p>
+            <p class="sub">코스피·코스닥 57종목의 추세와 위험을 문장으로 설명합니다. 업종마다 최소 3종목씩 담아 한쪽으로 쏠리지 않게 했습니다.</p>
           </div>
           <div class="actions">
             <button class="btn" data-go="learn">용어부터 배우기</button>
@@ -361,6 +386,16 @@ dialog::backdrop{background:#0a121fa8}
         <div class="status-strip" id="live-status">
           <div class="status-main"><span class="pulse"></span><div><strong>자료를 불러오는 중입니다</strong><small>잠시만 기다려 주세요.</small></div></div>
         </div>
+        <section class="card us-brief" id="us-brief-card">
+          <div class="card-head">
+            <div><h3>전일 미국 시장</h3><p>규칙 기반 자동 요약입니다 · 코스피 개장 전 참고용이며 그대로 예측이 아닙니다</p></div>
+            <span class="asof" id="us-asof"></span>
+          </div>
+          <div class="us-headline" id="us-headline">자료를 불러오는 중입니다</div>
+          <ul class="us-points" id="us-points"></ul>
+          <div class="us-strip" id="us-strip"></div>
+          <div class="us-sectors" id="us-sectors"></div>
+        </section>
         <div class="grid market-grid" id="market-cards"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
         <div class="decision" id="market-decision">
           <div class="decision-copy"><div class="decision-icon">···</div><div><small>시장 해석</small><h3>판단에 필요한 자료를 확인하는 중입니다</h3></div></div>
@@ -419,7 +454,7 @@ dialog::backdrop{background:#0a121fa8}
         </div>
         <div class="table-wrap">
           <table>
-            <caption class="sr">코스피·코스닥 40종목을 섹터별로 묶어 지표와 판단을 보여주는 표. 각 행을 열면 자세한 근거를 볼 수 있습니다.</caption>
+            <caption class="sr">코스피·코스닥 57종목을 섹터별로 묶어 지표와 판단을 보여주는 표. 각 행을 열면 자세한 근거를 볼 수 있습니다.</caption>
             <thead><tr><th scope="col">종목</th><th scope="col">현재가 / 등락</th><th scope="col">추세</th><th scope="col">RSI</th><th scope="col">52주 위치</th><th scope="col">종합점수</th><th scope="col">판단</th></tr></thead>
             <tbody id="stock-table"></tbody>
           </table>
@@ -451,12 +486,14 @@ dialog::backdrop{background:#0a121fa8}
         <section class="card" style="margin-bottom:16px">
           <div class="card-head"><div><h3>여러 지표를 함께 보는 순서</h3><p>점수 하나만 보지 말고 이 순서로 확인하면 판단이 훨씬 단단해집니다.</p></div></div>
           <div class="grid lesson-grid">
-            <div class="lesson"><h3>1. 시장부터</h3><p>코스피·코스닥 카드의 색이 붉은 계열(위험 회피)이면 종목이 아무리 좋아 보여도 기준을 더 엄격히 봅니다.</p></div>
-            <div class="lesson"><h3>2. 섹터로 좁히기</h3><p>'지금 강한 섹터'에서 평균 점수가 높은 업종 안의 종목을 먼저 봅니다. 업종 전체가 밀리는데 한 종목만 좋기는 어렵습니다.</p></div>
-            <div class="lesson"><h3>3. 종목 점수와 위험</h3><p>종합점수, 손익비, 52주 위치를 함께 봅니다. 점수가 높아도 52주 신고가 바로 아래라면 추격 매수 위험이 있습니다.</p></div>
-            <div class="lesson"><h3>4. 거래대금으로 확인</h3><p>거래대금 상위에 있다면 그만큼 많은 사람이 지켜보고 있다는 뜻입니다. 반대로 없다면 신호가 아직 얇을 수 있습니다.</p></div>
-            <div class="lesson"><h3>5. 환율은 배경으로</h3><p>원/달러 환율이 계속 오르는 국면(원화 약세)에서는 외국인 자금이 국내 증시에서 빠져나가는 경향이 있다고 알려져 있습니다. 늘 그런 것은 아니지만 배경으로 참고하세요.</p></div>
-            <div class="lesson"><h3>6. 판단 기록으로 검증</h3><p>이 순서를 거쳐도 결국 확률 게임입니다. '판단 기록' 화면에서 이 앱의 실제 성적을 주기적으로 확인하세요.</p></div>
+            <div class="lesson"><h3>1. 전일 미국 시장</h3><p>화면 맨 위 '전일 미국 시장' 요약을 먼저 읽습니다. 미국이 크게 하락했거나 VIX가 불안 구간이면 오늘 코스피도 조심스러운 출발일 가능성이 있습니다.</p></div>
+            <div class="lesson"><h3>2. 국내 시장부터</h3><p>코스피·코스닥 카드의 색이 붉은 계열(위험 회피)이면 종목이 아무리 좋아 보여도 기준을 더 엄격히 봅니다.</p></div>
+            <div class="lesson"><h3>3. 섹터로 좁히기</h3><p>'지금 강한 섹터'에서 평균 점수가 높은 업종 안의 종목을 먼저 봅니다. 업종 전체가 밀리는데 한 종목만 좋기는 어렵습니다.</p></div>
+            <div class="lesson"><h3>4. 종목 점수와 위험</h3><p>종합점수, 손익비, 52주 위치를 함께 봅니다. 점수가 높아도 52주 신고가 바로 아래라면 추격 매수 위험이 있습니다.</p></div>
+            <div class="lesson"><h3>5. 시간봉으로 타이밍 확인</h3><p>종목 상세의 시간봉 차트에서 현재가가 진입 구간(연두색 띠) 안에 있는지, 손절선에 너무 가깝지 않은지 눈으로 확인합니다.</p></div>
+            <div class="lesson"><h3>6. 거래대금으로 확인</h3><p>거래대금 상위에 있다면 그만큼 많은 사람이 지켜보고 있다는 뜻입니다. 반대로 없다면 신호가 아직 얇을 수 있습니다.</p></div>
+            <div class="lesson"><h3>7. 환율은 배경으로</h3><p>원/달러 환율이 계속 오르는 국면(원화 약세)에서는 외국인 자금이 국내 증시에서 빠져나가는 경향이 있다고 알려져 있습니다. 늘 그런 것은 아니지만 배경으로 참고하세요.</p></div>
+            <div class="lesson"><h3>8. 판단 기록으로 검증</h3><p>이 순서를 거쳐도 결국 확률 게임입니다. '판단 기록' 화면에서 이 앱의 실제 성적을 주기적으로 확인하세요.</p></div>
           </div>
         </section>
 
@@ -472,8 +509,11 @@ dialog::backdrop{background:#0a121fa8}
             <div class="term"><b>52주 위치</b><span>최근 1년 최고~최저 구간에서 지금 위치</span></div>
             <div class="term"><b>시장 폭</b><span>상승 종목 수와 하락 종목 수의 비교</span></div>
             <div class="term"><b>손익비</b><span>감수할 손실 대비 기대 수익</span></div>
+            <div class="term"><b>VIX</b><span>미국 증시의 공포지수, 높을수록 불안 심리</span></div>
+            <div class="term"><b>1차·2차 목표</b><span>1차는 보수적 이익실현, 2차는 추세 지속 시 확장 목표</span></div>
           </section>
           <section class="card lesson"><h3>처음 투자할 때의 순서</h3><ol><li>생활비와 비상금을 먼저 떼어 둡니다.</li><li>시장 전체가 어느 쪽인지 봅니다.</li><li>종목의 공시와 실적을 확인합니다.</li><li>진입가·손절가·목표가를 적어 둡니다.</li><li>한 번에 전액을 사지 않습니다.</li></ol></section>
+          <section class="card lesson"><h3>1차·2차 목표, 어떻게 쓰나요</h3><p>1차 목표에 닿으면 절반쯤 정리해 이익을 확정 짓고, 나머지는 손절가를 매입가 부근으로 올려둔 채 2차 목표까지 지켜보는 방법을 많이 씁니다. 반드시 지켜야 하는 규칙은 아니지만, 다 오르길 기다리다 되돌림을 맞는 것보다 낫습니다.</p></section>
           <section class="card lesson"><h3>반드시 피할 행동</h3><ul><li>많이 올랐다는 이유만으로 따라 사기</li><li>손절 기준 없이 계속 물타기</li><li>한 종목에 투자금 몰아넣기</li><li>대출금이나 생활비로 투자하기</li><li>이 앱의 판단을 확정된 수익으로 믿기</li></ul></section>
         </div>
       </section>
@@ -495,10 +535,12 @@ dialog::backdrop{background:#0a121fa8}
             <div class="lesson"><h3>52주 위치</h3><p>점수가 같아도 52주 신고가 바로 아래인지, 바닥권인지에 따라 위험이 다릅니다. 위험 문구에 자동으로 반영됩니다.</p></div>
             <div class="lesson"><h3>섹터 평균·시장 폭·거래대금</h3><p>개별 종목 점수와 별개로, 업종 전체와 시장 전체의 분위기를 보여줍니다. 종목 점수와 시장 분위기가 엇갈리면 더 보수적으로 접근하세요.</p></div>
             <div class="lesson"><h3>원/달러 환율</h3><p>외국인 수급에 영향을 주는 배경 지표입니다. 특정 종목의 판단에 직접 반영되지는 않습니다.</p></div>
+            <div class="lesson"><h3>전일 미국 시장 요약</h3><p>S&P500·나스닥·다우·VIX·10년물 금리·업종 ETF 수치로 문장을 만드는 <b>규칙 기반 자동 요약</b>입니다. 생성형 AI가 그때그때 의견을 쓰는 것이 아니라, 이 앱의 다른 판단과 똑같은 방식입니다. 코스피 종목 점수에는 반영되지 않는 배경 정보입니다.</p></div>
+            <div class="lesson"><h3>시간봉 차트</h3><p>진입·손절·목표선을 겹쳐 보여주는 보조 도구입니다. 57종목 전체를 20분마다 받으면 부담이 커서 <b>하루 두 번(08:20, 15:50)</b>만 갱신됩니다. 표의 점수·판단은 지금처럼 20분마다 최신입니다.</p></div>
           </div>
         </section>
 
-        <div class="notice"><span>!</span><span><b>솔직히 말씀드립니다.</b> 이 배점(추세 25점, 상승 힘 20점 …)은 백테스트로 검증된 값이 아니라 합리적으로 보이도록 정한 숫자입니다. 그래서 '판단 기록' 화면을 두었습니다. 성적을 직접 보고 믿을지 말지 정하세요. 가격과 거래량만 보므로 실적, 돌발 공시, 환율·금리 충격은 전혀 반영하지 못합니다.</span></div>
+        <div class="notice"><span>!</span><span><b>솔직히 말씀드립니다.</b> 이 배점(추세 25점, 상승 힘 20점 …)은 백테스트로 검증된 값이 아니라 합리적으로 보이도록 정한 숫자입니다. 그래서 '판단 기록' 화면을 두었습니다. 성적을 직접 보고 믿을지 말지 정하세요. 가격과 거래량만 보므로 실적, 돌발 공시, 환율·금리 충격은 전혀 반영하지 못합니다. 2차 목표가는 1차 목표를 근거로 단순히 늘린 값이라 1차보다 신뢰도가 낮습니다.</span></div>
       </section>
 
       <section class="view" id="view-data">
@@ -511,16 +553,27 @@ dialog::backdrop{background:#0a121fa8}
             <ul><li>공급자에 따라 15~20분 지연될 수 있습니다.</li><li>지수 두 개 중 하나라도 실패하면 파일을 갱신하지 않습니다.</li><li>자료가 너무 오래되면 판단 표시를 자동으로 멈춥니다.</li></ul>
           </section>
           <section class="connection-box">
-            <h3>코스피 20 · 코스닥 20, 총 40종목</h3>
+            <h3>코스피 36 · 코스닥 21, 총 57종목</h3>
             <p>업종을 고르게 섞어 구성했습니다. 종목을 바꾸려면 저장소의 update_market.py 위쪽 UNIVERSE 목록만 고치면 됩니다.</p>
             <ol><li>평일 장중 20분 간격으로 실행</li><li>혼잡하면 실행이 늦어질 수 있음</li><li>화면에는 항상 '몇 분 전 자료'인지 표시</li></ol>
           </section>
+          <section class="connection-box">
+            <h3>전일 미국 시장</h3>
+            <p>S&P500·나스닥·다우·VIX·10년물 금리·업종 ETF 6종을 야후·Stooq에서 받아 규칙 기반 문장으로 요약합니다.</p>
+            <ul><li>일부 지표가 실패해도 나머지로 요약합니다.</li><li>생성형 AI 실시간 호출이 아니라 계산 규칙입니다.</li><li>코스피 종목 점수에는 반영되지 않습니다.</li></ul>
+          </section>
+          <section class="connection-box">
+            <h3>시간봉 차트</h3>
+            <p>57종목의 60분봉을 하루 두 번만 받습니다. 20분마다 받으면 API 부담과 차단 위험이 커지기 때문입니다.</p>
+            <ol><li>08:20 (장 시작 전)</li><li>15:50 (장 마감 후)</li><li>점수·판단은 이와 별개로 20분마다 최신</li></ol>
+          </section>
         </div>
-        <div class="code">갱신 주기: 평일 09:05~15:45 한국시간, 20분 간격
+        <div class="code">점수·판단 갱신: 평일 09:05~15:45 한국시간, 20분 간격
+시간봉·미국 시장 갱신: 평일 08:20, 15:50 한국시간 (하루 2회)
 지연 안내: GitHub 혼잡 시 실행이 5~30분 밀릴 수 있음
 브라우저: 화면을 다시 볼 때마다 새 파일이 있는지 확인
 안전장치: 장중 3시간 넘게 갱신이 없으면 판단 표시 중지
-대상 종목: 코스피 20 · 코스닥 20 (총 40)
+대상 종목: 코스피 36 · 코스닥 21 (총 57, 업종별 3종목 이상)
 주문 기능: 없음 (읽기 전용)</div>
         <div id="collection-errors"></div>
       </section>
@@ -566,7 +619,7 @@ const COMPONENT = {
 };
 const ACTION_ORDER = ["BUY_REVIEW","HOLD","WAIT","REDUCE","SELL_REVIEW","STALE"];
 
-let state = null, history = null, loading = false, lastError = "", selectedCode = "", marketFilter = "";
+let state = null, history = null, intraday = null, loading = false, lastError = "", selectedCode = "", marketFilter = "";
 
 const store = {
   get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
@@ -625,7 +678,7 @@ function actionFor(s) {
     return { ...s.decision, action:"SELL_REVIEW", label:"매도·손절 검토",
       summary:`손절 기준을 건드렸거나 하락 추세가 확인됩니다.${gap}` };
   }
-  if (s.price >= s.target || s.rsi14 >= 75) {
+  if (s.price >= s.target1 || s.rsi14 >= 75) {
     return { ...s.decision, action:"REDUCE", label:"일부 이익실현 검토",
       summary:`목표가나 과열 구간에 닿았습니다. 수익 일부를 지키는 선택을 생각해 볼 자리입니다.${gap}` };
   }
@@ -731,11 +784,24 @@ async function loadHistory() {
   renderHistory();
 }
 
+async function loadIntraday() {
+  if (intraday) return intraday;
+  const stamp = Date.now();
+  const urls = [`intraday.json?v=${stamp}`];
+  const raw = rawUrl("intraday.json");
+  if (raw) urls.push(`${raw}?v=${stamp}`);
+  const results = await Promise.allSettled(urls.map(grab));
+  const ok = results.find(r => r.status === "fulfilled");
+  intraday = ok ? ok.value : { bars:{}, generated_at:null };
+  return intraday;
+}
+
 /* ------------------------------------------------------------ 그리기 */
 
 function render() {
   renderSample();
   renderStatus();
+  renderUSMarket();
   renderMarkets();
   renderSectors();
   renderValueLeaders();
@@ -802,6 +868,43 @@ function renderFailure() {
   $("#market-cards").innerHTML = `<div class="empty" style="grid-column:1/-1">시세 파일(live-data.json)을 찾지 못했습니다. 저장소의 Actions에서 <b>Refresh market data</b>를 한 번 실행해 주세요.</div>`;
   $("#market-decision").innerHTML = `<div class="decision-copy"><div class="decision-icon">!</div><div><small>안전장치</small><h3>자료가 없어 아무 판단도 하지 않습니다</h3><p>${esc(lastError)}</p></div></div>`;
   $("#home-signals").innerHTML = `<div class="empty">표시할 종목이 없습니다</div>`;
+  $("#us-headline").textContent = "자료를 불러오지 못해 미국 시장 요약도 표시할 수 없습니다.";
+}
+
+function renderUSMarket() {
+  const us = state?.us_market;
+  const card = $("#us-brief-card");
+  if (!us || !us.briefing) {
+    $("#us-headline").textContent = "미국 시장 자료를 아직 받지 못했습니다.";
+    $("#us-points").innerHTML = "";
+    $("#us-strip").innerHTML = "";
+    $("#us-sectors").innerHTML = "";
+    $("#us-asof").textContent = "";
+    return;
+  }
+  $("#us-asof").textContent = us.quote_time ? `美 마감 기준 ${dateTime(us.quote_time)}` : "";
+  $("#us-headline").textContent = us.briefing.headline;
+  $("#us-points").innerHTML = us.briefing.points.map(p => `<li>${esc(p)}</li>`).join("");
+
+  const chips = [];
+  for (const idx of us.indices || []) {
+    const up = idx.change_pct >= 0;
+    chips.push(`<div class="us-chip"><span>${esc(idx.name)}</span><strong class="${up ? "up" : "down"}">${up ? "▲" : "▼"} ${pct(idx.change_pct)}</strong></div>`);
+  }
+  if (us.vix) {
+    const up = us.vix.change_pct >= 0;
+    chips.push(`<div class="us-chip"><span>VIX</span><strong class="${up ? "up" : "down"}">${num(us.vix.value).toFixed(1)}</strong></div>`);
+  }
+  if (us.yield10y) {
+    const up = us.yield10y.change_pp >= 0;
+    chips.push(`<div class="us-chip"><span>美 10년물</span><strong class="${up ? "up" : "down"}">${num(us.yield10y.value).toFixed(2)}%</strong></div>`);
+  }
+  $("#us-strip").innerHTML = chips.join("");
+
+  $("#us-sectors").innerHTML = (us.sectors || []).map(s => {
+    const up = s.change_pct >= 0;
+    return `<span class="us-sector-tag" style="background:${up ? "var(--signal-bg)" : "var(--alert-bg)"};color:${up ? "var(--signal-ink)" : "var(--alert-ink)"}">${esc(s.name)} ${pct(s.change_pct)}</span>`;
+  }).join("");
 }
 
 function renderMarkets() {
@@ -1028,6 +1131,69 @@ function renderData() {
 
 /* ------------------------------------------------------------ 상세 화면 */
 
+function renderIntradayChart(s) {
+  const box = $("#intraday-chart");
+  const bars = intraday?.bars?.[s.code] || [];
+  if (bars.length < 5) {
+    box.innerHTML = `<div class="empty" style="padding:24px 0">이 종목의 시간봉 자료가 아직 없습니다. 장 시작 전(08:20)과 마감 후(15:50) 하루 두 번만 갱신됩니다.</div>`;
+    $("#chart-asof").textContent = "";
+    return;
+  }
+  const closes = bars.map(b => b.c).filter(Number.isFinite);
+  const refs = [s.entry_low, s.entry_high, s.stop, s.target1, s.target2, s.price].filter(Number.isFinite);
+  const lo0 = Math.min(...closes, ...refs), hi0 = Math.max(...closes, ...refs);
+  const pad = (hi0 - lo0) * 0.1 || hi0 * 0.02 || 1;
+  const lo = lo0 - pad, hi = hi0 + pad;
+
+  const W = 640, H = 210, ML = 56, MR = 10, MT = 10, MB = 22;
+  const plotW = W - ML - MR, plotH = H - MT - MB;
+  const xAt = i => ML + (i / Math.max(1, bars.length - 1)) * plotW;
+  const yAt = v => MT + (1 - (v - lo) / (hi - lo)) * plotH;
+
+  const linePts = closes.map((c, i) => `${xAt(i).toFixed(1)},${yAt(c).toFixed(1)}`).join(" ");
+
+  let dayMarks = "";
+  let lastDate = "";
+  bars.forEach((b, i) => {
+    const d = String(b.t).slice(0, 10);
+    if (d !== lastDate) {
+      lastDate = d;
+      const xx = xAt(i).toFixed(1);
+      dayMarks += `<line x1="${xx}" y1="${MT}" x2="${xx}" y2="${MT + plotH}" style="stroke:#e5e2d5;stroke-width:1"/>`;
+      dayMarks += `<text x="${xx}" y="${H - 6}" style="font:9px var(--font-mono);fill:#8b8878">${d.slice(5, 7)}/${d.slice(8, 10)}</text>`;
+    }
+  });
+
+  const refLine = (val, color, dash, label) => {
+    const yy = yAt(val).toFixed(1);
+    return `<line x1="${ML}" y1="${yy}" x2="${W - MR}" y2="${yy}" style="stroke:${color};stroke-width:1.4${dash ? `;stroke-dasharray:${dash}` : ""}"/>
+      <text x="${W - MR}" y="${(+yy - 3).toFixed(1)}" text-anchor="end" style="font:9px var(--font-mono);fill:${color}">${label}</text>`;
+  };
+
+  const entryTop = yAt(s.entry_high), entryBot = yAt(s.entry_low);
+  const entryBand = `<rect x="${ML}" y="${entryTop.toFixed(1)}" width="${plotW}" height="${Math.max(0, entryBot - entryTop).toFixed(1)}" style="fill:var(--signal);opacity:.1"/>`;
+
+  const yTicks = [hi0, (hi0 + lo0) / 2, lo0].map(v =>
+    `<text x="${ML - 6}" y="${(yAt(v) + 3).toFixed(1)}" text-anchor="end" style="font:9px var(--font-mono);fill:#8b8878">${Math.round(v).toLocaleString("ko-KR")}</text>`
+  ).join("");
+
+  const lastX = xAt(closes.length - 1), lastY = yAt(closes[closes.length - 1]);
+
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 시간봉 가격 추이와 진입·손절·목표 참고선">
+    ${entryBand}
+    ${refLine(s.stop, "var(--down)", "4,3", "손절")}
+    ${refLine(s.target1, "var(--up)", "", "1차")}
+    ${refLine(s.target2, "var(--up)", "4,3", "2차")}
+    ${dayMarks}
+    <polyline points="${linePts}" style="fill:none;stroke:var(--ink);stroke-width:1.8"/>
+    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3.2" style="fill:var(--ink)"/>
+    ${yTicks}
+  </svg>`;
+
+  const last = bars[bars.length - 1];
+  $("#chart-asof").textContent = last?.t ? `시간봉 기준 ${dateTime(last.t)}` : "";
+}
+
 function openDetail(code) {
   const s = state?.stocks.find(x => x.code === code);
   if (!s) return;
@@ -1056,11 +1222,23 @@ function openDetail(code) {
       </div>
     </div>
 
-    <div class="levels">
+    <div class="levels levels-5">
       <div class="level"><span>현재가</span><strong>${won(s.price)}</strong></div>
       <div class="level"><span>진입 구간</span><strong>${won(s.entry_low)} ~ ${won(s.entry_high)}</strong></div>
       <div class="level"><span>손절 기준</span><strong class="down">${won(s.stop)}</strong></div>
-      <div class="level"><span>1차 목표</span><strong class="up">${won(s.target)}</strong></div>
+      <div class="level"><span>1차 목표</span><strong class="up">${won(s.target1)}</strong></div>
+      <div class="level"><span>2차 목표</span><strong class="up">${won(s.target2)}</strong></div>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-head"><h4>시간봉 · 진입·손절·목표 참고선</h4><span id="chart-asof" class="chart-asof"></span></div>
+      <div id="intraday-chart"><div class="empty" style="padding:24px 0">시간봉 자료를 불러오는 중입니다</div></div>
+      <div class="chart-legend">
+        <span><i class="lg lg-entry"></i>진입 구간</span>
+        <span><i class="lg lg-stop"></i>손절</span>
+        <span><i class="lg lg-t1"></i>1차 목표</span>
+        <span><i class="lg lg-t2"></i>2차 목표</span>
+      </div>
     </div>
 
     <div class="w52-box">
@@ -1092,6 +1270,7 @@ function openDetail(code) {
   const dlg = $("#detail");
   if (!dlg.open) dlg.showModal();
   dlg.querySelector(".close").focus();
+  loadIntraday().then(() => { if (selectedCode === code) renderIntradayChart(s); });
 }
 
 function applyPosition() {
@@ -1108,12 +1287,12 @@ function applyPosition() {
 
 function downloadCSV() {
   if (!state) return;
-  const head = "종목코드,종목명,시장,업종,현재가,등락률,RSI,52주위치,점수,판단,진입하단,진입상단,손절가,목표가,손익비,시세시각";
+  const head = "종목코드,종목명,시장,업종,현재가,등락률,RSI,52주위치,점수,판단,진입하단,진입상단,손절가,1차목표,2차목표,손익비,시세시각";
   const rows = state.stocks.map(s => {
     const d = actionFor(s);
     const w52 = s.week52 || { position:"" };
     return [s.code, s.name, s.market, s.sector, s.price, (num(s.change_pct) * 100).toFixed(2), s.rsi14,
-      (num(w52.position) * 100).toFixed(0), s.score, d.label, s.entry_low, s.entry_high, s.stop, s.target, s.risk_reward, s.quote_time]
+      (num(w52.position) * 100).toFixed(0), s.score, d.label, s.entry_low, s.entry_high, s.stop, s.target1, s.target2, s.risk_reward, s.quote_time]
       .map(v => `"${String(v).replaceAll('"', '""')}"`).join(",");
   });
   const blob = new Blob(["\uFEFF" + [head, ...rows].join("\n")], { type:"text/csv;charset=utf-8" });
