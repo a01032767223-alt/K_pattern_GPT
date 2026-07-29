@@ -58,7 +58,11 @@ UNIVERSE = [
 ]
 
 session = requests.Session()
-session.headers.update({"User-Agent": UA, "Accept": "application/json,text/plain,*/*"})
+session.headers.update({
+    "User-Agent": UA,
+    "Accept": "application/json,text/plain,*/*",
+    "Referer": "https://finance.naver.com/",
+})
 errors: list[dict] = []
 
 
@@ -110,17 +114,21 @@ def from_yahoo(symbol: str) -> dict | None:
     }
 
 
-def from_naver(code: str) -> dict | None:
+def from_naver(symbol: str) -> dict | None:
+    """네이버의 비공식 공개 JSON. 종목코드(예: 005930)와 지수 심볼(KOSPI, KOSDAQ) 모두 지원한다."""
     end = datetime.now(KST).strftime("%Y%m%d")
     start = (datetime.now(KST) - timedelta(days=560)).strftime("%Y%m%d")
     url = "https://api.finance.naver.com/siseJson.naver"
     res = session.get(
         url,
-        params={"symbol": code, "requestType": 1, "startTime": start, "endTime": end, "timeframe": "day"},
+        params={"symbol": symbol, "requestType": 1, "startTime": start, "endTime": end, "timeframe": "day"},
         timeout=15,
     )
     res.raise_for_status()
-    rows = json.loads(res.text.strip().replace("'", '"'))
+    text = res.text.strip()
+    if not text or text[0] not in "[{":
+        raise ValueError(f"예상치 못한 응답(앞 40자): {text[:40]!r}")
+    rows = json.loads(text.replace("'", '"'))
     bars = []
     for row in rows[1:]:
         try:
@@ -175,24 +183,39 @@ def from_stooq(code: str) -> dict | None:
     }
 
 
-def fetch(label: str, yahoo_symbol: str, code: str | None) -> dict | None:
-    """야후 → 네이버 → Stooq 순으로 시도한다. 모두 실패하면 None."""
-    attempts = [("Yahoo", lambda: from_yahoo(yahoo_symbol))]
-    if code:
-        attempts += [("Naver", lambda: from_naver(code)), ("Stooq", lambda: from_stooq(code))]
-    else:
-        attempts += [("Naver", lambda: from_naver(yahoo_symbol))]
-    last = ""
+def fetch_index(label: str, meta: dict) -> dict | None:
+    """지수는 네이버(symbol=KOSPI/KOSDAQ) → 야후 순으로 시도한다.
+    GitHub Actions 서버 IP가 야후에 막히는 경우가 잦아 네이버를 먼저 쓴다."""
+    attempts = [("Naver", lambda: from_naver(meta["naver"])), ("Yahoo", lambda: from_yahoo(meta["yahoo"]))]
+    return _try_all(label, attempts)
+
+
+def fetch_stock(label: str, code: str, yahoo_symbol: str) -> dict | None:
+    """종목은 네이버 → Stooq → 야후 순으로 시도한다."""
+    attempts = [
+        ("Naver", lambda: from_naver(code)),
+        ("Stooq", lambda: from_stooq(code)),
+        ("Yahoo", lambda: from_yahoo(yahoo_symbol)),
+    ]
+    return _try_all(label, attempts)
+
+
+def _try_all(label: str, attempts: list[tuple[str, object]]) -> dict | None:
+    fails = []
     for source, fn in attempts:
+        source_error = ""
         for retry in range(2):
             try:
                 data = fn()
                 if data:
+                    if fails:
+                        print(f"  · {label}: {' / '.join(fails)} 실패 후 {source}로 수집 성공", file=sys.stderr)
                     return data
-            except Exception as exc:  # noqa: BLE001 - 어떤 실패든 다음 경로로 넘어간다
-                last = f"{source} {type(exc).__name__} {exc}"
-                time.sleep(1.2 * (retry + 1))
-    note_error(label, last or "알 수 없는 실패")
+            except Exception as exc:  # noqa: BLE001 - 어떤 실패든 다음 소스로 넘어간다
+                source_error = f"{source} {type(exc).__name__}: {exc}"
+                time.sleep(1.0 * (retry + 1))
+        fails.append(source_error)
+    note_error(label, " · ".join(fails) or "알 수 없는 실패")
     return None
 
 
@@ -500,7 +523,7 @@ def main() -> int:
 
     markets, stocks = [], []
     for meta in INDEXES:
-        raw = sample_raw(hash(meta["market"]) % 9999, 2600.0) if sample else fetch(meta["name"], meta["yahoo"], None)
+        raw = sample_raw(hash(meta["market"]) % 9999, 2600.0) if sample else fetch_index(meta["name"], meta)
         if not raw:
             print(f"지수 {meta['name']} 수집 실패. 기존 파일을 유지하고 종료합니다.", file=sys.stderr)
             return 1
@@ -508,7 +531,11 @@ def main() -> int:
 
     by_market = {m["market"]: m for m in markets}
     for i, meta in enumerate(UNIVERSE):
-        raw = sample_raw(i * 37 + 5, 20000 + i * 4200, 0.0016 if i % 3 == 0 else -0.0008 if i % 3 == 1 else 0.0) if sample else fetch(meta["name"], f"{meta['code']}.{'KS' if meta['market'] == 'KOSPI' else 'KQ'}", meta["code"])
+        if sample:
+            raw = sample_raw(i * 37 + 5, 20000 + i * 4200, 0.0016 if i % 3 == 0 else -0.0008 if i % 3 == 1 else 0.0)
+        else:
+            yahoo_symbol = f"{meta['code']}.{'KS' if meta['market'] == 'KOSPI' else 'KQ'}"
+            raw = fetch_stock(meta["name"], meta["code"], yahoo_symbol)
         if not raw:
             continue
         stocks.append(build_stock(meta, raw, by_market[meta["market"]]))
