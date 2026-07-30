@@ -502,7 +502,9 @@ def build_stock(meta: dict, raw: dict, market: dict) -> dict:
     atr_stop = entry_low * (1 - atr * 1.5)
     ma_stop = (ma60 or 0) * 0.985
     # 60일선 바로 아래가 손절 자리로 더 가까우면 그쪽을 쓴다(손실 폭을 줄이기 위해서다).
-    stop = round(max(atr_stop, ma_stop) if 0 < ma_stop < entry_low else atr_stop, 1)
+    stop = max(atr_stop, ma_stop) if 0 < ma_stop < entry_low else atr_stop
+    # 안전장치: 손절은 반드시 진입 하단과 현재가보다 낮아야 한다(차트에서 위로 뒤집히지 않도록).
+    stop = round(min(stop, entry_low * 0.999, price * 0.985), 1)
     target1 = round(entry_high * (1 + atr * 4.0), 1)
     # 2차 목표는 1차까지의 보상폭을 추세 지속을 가정해 1.8배로 늘린 확장 목표다.
     target2 = round(entry_high + (target1 - entry_high) * 1.8, 1)

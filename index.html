@@ -279,8 +279,18 @@ dialog::backdrop{background:#0a121fa8}
 .tf-tabs button{border:0;background:transparent;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:#5c6570;white-space:nowrap;font-family:var(--font-mono)}
 .tf-tabs button.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(20,20,10,.14)}
 .tf-tabs button:disabled{opacity:.35;cursor:not-allowed}
-#intraday-chart{width:100%}
+#intraday-chart{width:100%;cursor:zoom-in;position:relative}
 #intraday-chart svg{width:100%;height:auto;display:block}
+.chart-expand-hint{position:absolute;top:6px;right:8px;background:#ffffffe0;border:1px solid var(--line);border-radius:7px;
+  padding:3px 9px;font-size:11px;font-weight:700;color:#5c6570;pointer-events:none}
+#chart-fs{border:0;padding:0;border-radius:16px;width:min(1100px,96vw);max-width:96vw;max-height:94vh;color:var(--text)}
+#chart-fs::backdrop{background:#0a121fc0}
+.fs-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;border-bottom:1px solid var(--line)}
+.fs-head h3{font-size:18px;margin:0;font-weight:600}
+#chart-fs .tf-tabs{margin:12px 20px 0}
+.fs-chart{padding:6px 20px 4px}
+.fs-chart svg{width:100%;height:auto;display:block}
+#chart-fs .chart-legend{padding:4px 20px 18px;margin-top:4px}
 .chart-legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:var(--muted)}
 .chart-legend span{display:inline-flex;align-items:center;gap:5px}
 .lg{width:14px;height:0;border-top:2px solid;display:inline-block}
@@ -497,7 +507,7 @@ dialog::backdrop{background:#0a121fa8}
             <div class="lesson"><h3>2. 국내 시장부터</h3><p>코스피·코스닥 카드의 색이 붉은 계열(위험 회피)이면 종목이 아무리 좋아 보여도 기준을 더 엄격히 봅니다.</p></div>
             <div class="lesson"><h3>3. 섹터로 좁히기</h3><p>'지금 강한 섹터'에서 평균 점수가 높은 업종 안의 종목을 먼저 봅니다. 업종 전체가 밀리는데 한 종목만 좋기는 어렵습니다.</p></div>
             <div class="lesson"><h3>4. 종목 점수와 위험</h3><p>종합점수, 손익비, 52주 위치를 함께 봅니다. 점수가 높아도 52주 신고가 바로 아래라면 추격 매수 위험이 있습니다.</p></div>
-            <div class="lesson"><h3>5. 캔들 차트로 타이밍 확인</h3><p>종목 상세의 캔들 차트에서 현재가가 진입 구간(연두색 띠) 안에 있는지, 손절선에 너무 가깝지 않은지 눈으로 확인합니다. 큰 흐름은 일봉·주봉으로, 단기 진입 타이밍은 15분·1시간봉으로 나눠 보면 좋습니다.</p></div>
+            <div class="lesson"><h3>5. 캔들 차트로 타이밍 확인</h3><p>종목 상세의 캔들 차트에서 현재가가 진입 구간(연두색 띠) 안에 있는지, 손절선에 너무 가깝지 않은지 눈으로 확인합니다. 차트를 터치하면 큰 화면으로 확대됩니다. 큰 흐름은 일봉·주봉으로, 단기 진입 타이밍은 15분·1시간봉으로 나눠 보면 좋습니다.</p></div>
             <div class="lesson"><h3>6. 거래대금으로 확인</h3><p>거래대금 상위에 있다면 그만큼 많은 사람이 지켜보고 있다는 뜻입니다. 반대로 없다면 신호가 아직 얇을 수 있습니다.</p></div>
             <div class="lesson"><h3>7. 환율은 배경으로</h3><p>원/달러 환율이 계속 오르는 국면(원화 약세)에서는 외국인 자금이 국내 증시에서 빠져나가는 경향이 있다고 알려져 있습니다. 늘 그런 것은 아니지만 배경으로 참고하세요.</p></div>
             <div class="lesson"><h3>8. 판단 기록으로 검증</h3><p>이 순서를 거쳐도 결국 확률 게임입니다. '판단 기록' 화면에서 이 앱의 실제 성적을 주기적으로 확인하세요.</p></div>
@@ -605,6 +615,31 @@ dialog::backdrop{background:#0a121fa8}
 <dialog id="detail" aria-labelledby="modal-name">
   <div class="modal-head"><div><h3 id="modal-name"></h3><p id="modal-meta"></p></div><button class="close" aria-label="닫기">×</button></div>
   <div class="modal-body" id="modal-body"></div>
+</dialog>
+
+<dialog id="chart-fs" aria-label="확대 캔들 차트">
+  <div class="fs-head">
+    <div><h3 id="fs-title"></h3><span id="fs-asof" class="chart-asof"></span></div>
+    <button class="close" id="fs-close" aria-label="닫기">×</button>
+  </div>
+  <div class="tf-tabs" id="fs-tf-tabs" role="tablist" aria-label="시간대 선택">
+    <button data-tf="15m" role="tab">15분</button>
+    <button data-tf="30m" role="tab">30분</button>
+    <button data-tf="60m" role="tab">1시간</button>
+    <button data-tf="4h" role="tab">4시간</button>
+    <button data-tf="1d" role="tab">일봉</button>
+    <button data-tf="1wk" role="tab">주봉</button>
+  </div>
+  <div id="fs-chart" class="fs-chart"></div>
+  <div class="chart-legend">
+    <span><i class="lg lg-up"></i>양봉(상승)</span>
+    <span><i class="lg lg-down"></i>음봉(하락)</span>
+    <span><i class="lg lg-now"></i>현재가</span>
+    <span><i class="lg lg-entry"></i>진입 구간</span>
+    <span><i class="lg lg-stop"></i>손절</span>
+    <span><i class="lg lg-t1"></i>1차 목표</span>
+    <span><i class="lg lg-t2"></i>2차 목표</span>
+  </div>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -1156,7 +1191,7 @@ function setupTfTabs(code) {
     // 현재 선택한 시간대에 자료가 없으면, 자료가 있는 첫 시간대로 바꾼다.
     selectedTf = (intraday?.timeframes || Object.keys(frames)).find(tf => frames[tf]?.length) || selectedTf;
   }
-  $$("#tf-tabs [data-tf]").forEach(btn => {
+  $$("#tf-tabs [data-tf], #fs-tf-tabs [data-tf]").forEach(btn => {
     const tf = btn.dataset.tf;
     const has = !!(frames[tf]?.length);
     btn.disabled = !has;
@@ -1165,26 +1200,23 @@ function setupTfTabs(code) {
   });
 }
 
-function renderIntradayChart(s) {
-  const box = $("#intraday-chart");
-  const frames = framesFor(s.code);
-  const bars = frames?.[selectedTf] || [];
-  if (bars.length < 3) {
-    box.innerHTML = `<div class="empty" style="padding:24px 0">이 종목의 ${TF_LABEL[selectedTf] || selectedTf} 캔들 자료가 아직 없습니다. 차트는 장 시작 전(08:20)과 마감 후(15:50) 하루 두 번 갱신됩니다.</div>`;
-    $("#chart-asof").textContent = "";
-    return;
-  }
-
-  const W = 660, H = 300, ML = 58, MR = 12, MT = 10, MB = 20;
-  const volH = 46, gap = 8;
+/* 캔들 SVG 문자열을 만든다. big=true면 전체화면용(더 크고, 캔들·글자·여백을 키운다). */
+function buildCandleSVG(s, allBars, big) {
+  const maxN = big ? 120 : 60;              // 작은 차트는 최근 것 위주로 적게 → 캔들이 커진다
+  const bars = allBars.slice(-maxN);
+  const W = big ? 1040 : 660;
+  const H = big ? 560 : 300;
+  const ML = big ? 74 : 58, MR = big ? 68 : 52, MT = 12, MB = big ? 26 : 20;
+  const volH = big ? 90 : 46, gap = big ? 12 : 8;
+  const fs = big ? 13 : 9;                   // 기본 글자 크기
   const priceH = H - MT - MB - volH - gap;
   const plotW = W - ML - MR;
   const n = bars.length;
-  const cw = Math.max(1.5, Math.min(11, plotW / n * 0.68));
+  const cw = Math.max(2, Math.min(big ? 20 : 11, plotW / n * 0.7));
 
   const refs = [s.entry_low, s.entry_high, s.stop, s.target1, s.target2, s.price].filter(Number.isFinite);
-  let lo0 = Math.min(...bars.map(b => b.l), ...refs);
-  let hi0 = Math.max(...bars.map(b => b.h), ...refs);
+  const lo0 = Math.min(...bars.map(b => b.l), ...refs);
+  const hi0 = Math.max(...bars.map(b => b.h), ...refs);
   const pad = (hi0 - lo0) * 0.06 || hi0 * 0.02 || 1;
   const lo = lo0 - pad, hi = hi0 + pad;
   const maxVol = Math.max(...bars.map(b => b.v || 0), 1);
@@ -1208,16 +1240,18 @@ function renderIntradayChart(s) {
       const xx = (xAt(i) - cw / 2).toFixed(1);
       svg += `<line x1="${xx}" y1="${MT}" x2="${xx}" y2="${(MT + priceH).toFixed(1)}" style="stroke:#eceadf;stroke-width:1"/>`;
       const lbl = isIntradayTf ? `${key.slice(5,7)}/${key.slice(8,10)}` : `${key.slice(2,4)}.${key.slice(5,7)}`;
-      svg += `<text x="${xx}" y="${(H - 6).toFixed(1)}" style="font:9px var(--font-mono);fill:#8b8878">${lbl}</text>`;
+      svg += `<text x="${xx}" y="${(H - MB / 2).toFixed(1)}" style="font:${fs}px var(--font-mono);fill:#8b8878">${lbl}</text>`;
     }
   });
 
-  // 참고선
+  // 참고선 (라벨은 오른쪽 여백에 배지로)
   const refLine = (val, color, dash, label) => {
     if (!Number.isFinite(val)) return "";
-    const yy = yAt(val).toFixed(1);
-    return `<line x1="${ML}" y1="${yy}" x2="${W - MR}" y2="${yy}" style="stroke:${color};stroke-width:1.3${dash ? `;stroke-dasharray:${dash}` : ""}"/>
-      <text x="${W - MR}" y="${(+yy - 3).toFixed(1)}" text-anchor="end" style="font:9px var(--font-mono);fill:${color}">${label} ${Math.round(val).toLocaleString("ko-KR")}</text>`;
+    const yy = yAt(val);
+    const badgeW = big ? 62 : 50;
+    return `<line x1="${ML}" y1="${yy.toFixed(1)}" x2="${W - MR}" y2="${yy.toFixed(1)}" style="stroke:${color};stroke-width:${big ? 1.6 : 1.3}${dash ? `;stroke-dasharray:${big ? "6,4" : "4,3"}` : ""}"/>
+      <rect x="${W - MR + 2}" y="${(yy - fs / 2 - 2).toFixed(1)}" width="${badgeW}" height="${fs + 5}" rx="3" style="fill:${color};opacity:.14"/>
+      <text x="${W - MR + 5}" y="${(yy + fs / 2 - 1).toFixed(1)}" style="font:${fs}px var(--font-mono);fill:${color}">${label}</text>`;
   };
   svg += refLine(s.stop, "var(--down)", "4,3", "손절");
   svg += refLine(s.target1, "var(--up)", "", "1차");
@@ -1229,8 +1263,8 @@ function renderIntradayChart(s) {
     const up = b.c >= b.o;
     const col = up ? "var(--up)" : "var(--down)";
     const yO = yAt(b.o), yC = yAt(b.c), yH = yAt(b.h), yL = yAt(b.l);
-    const top = Math.min(yO, yC), bh = Math.max(0.8, Math.abs(yC - yO));
-    svg += `<line x1="${x.toFixed(1)}" y1="${yH.toFixed(1)}" x2="${x.toFixed(1)}" y2="${yL.toFixed(1)}" style="stroke:${col};stroke-width:1"/>`;
+    const top = Math.min(yO, yC), bh = Math.max(big ? 1.2 : 0.8, Math.abs(yC - yO));
+    svg += `<line x1="${x.toFixed(1)}" y1="${yH.toFixed(1)}" x2="${x.toFixed(1)}" y2="${yL.toFixed(1)}" style="stroke:${col};stroke-width:${big ? 1.4 : 1}"/>`;
     svg += `<rect x="${(x - cw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${cw.toFixed(1)}" height="${bh.toFixed(1)}" style="fill:${col}"/>`;
     if (b.v) {
       const vy = vyAt(b.v);
@@ -1238,21 +1272,57 @@ function renderIntradayChart(s) {
     }
   });
 
-  // 현재가 선
-  svg += `<line x1="${ML}" y1="${yAt(s.price).toFixed(1)}" x2="${W - MR}" y2="${yAt(s.price).toFixed(1)}" style="stroke:var(--ink);stroke-width:1.4"/>
-    <rect x="${ML}" y="${(yAt(s.price) - 8).toFixed(1)}" width="52" height="15" rx="3" style="fill:var(--ink)"/>
-    <text x="${(ML + 26).toFixed(1)}" y="${(yAt(s.price) + 2.5).toFixed(1)}" text-anchor="middle" style="font:9px var(--font-mono);fill:#fff">${Math.round(s.price).toLocaleString("ko-KR")}</text>`;
+  // 현재가 선 + 라벨(오른쪽)
+  const py = yAt(s.price), pbW = big ? 62 : 52;
+  svg += `<line x1="${ML}" y1="${py.toFixed(1)}" x2="${W - MR}" y2="${py.toFixed(1)}" style="stroke:var(--ink);stroke-width:${big ? 1.8 : 1.4}"/>
+    <rect x="${W - MR + 2}" y="${(py - fs / 2 - 3).toFixed(1)}" width="${pbW}" height="${fs + 6}" rx="3" style="fill:var(--ink)"/>
+    <text x="${W - MR + 5}" y="${(py + fs / 2 - 1).toFixed(1)}" style="font:${fs}px var(--font-mono);fill:#fff">${Math.round(s.price).toLocaleString("ko-KR")}</text>`;
 
-  // Y축 눈금
+  // Y축 눈금(왼쪽)
   [hi0, (hi0 + lo0) / 2, lo0].forEach(v => {
-    svg += `<text x="${ML - 6}" y="${(yAt(v) + 3).toFixed(1)}" text-anchor="end" style="font:9px var(--font-mono);fill:#8b8878">${Math.round(v).toLocaleString("ko-KR")}</text>`;
+    svg += `<text x="${ML - 6}" y="${(yAt(v) + fs / 2 - 1).toFixed(1)}" text-anchor="end" style="font:${fs}px var(--font-mono);fill:#8b8878">${Math.round(v).toLocaleString("ko-KR")}</text>`;
   });
-  svg += `<text x="${ML - 6}" y="${(volTop + 9).toFixed(1)}" text-anchor="end" style="font:8px var(--font-mono);fill:#b3ad9c">거래량</text>`;
+  svg += `<text x="${ML - 6}" y="${(volTop + fs).toFixed(1)}" text-anchor="end" style="font:${fs - 1}px var(--font-mono);fill:#b3ad9c">거래량</text>`;
 
-  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.name)} ${TF_LABEL[selectedTf]} 캔들 차트와 진입·손절·목표 참고선">${svg}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.name)} ${TF_LABEL[selectedTf]} 캔들 차트">${svg}</svg>`;
+}
 
+function renderIntradayChart(s) {
+  const box = $("#intraday-chart");
+  const frames = framesFor(s.code);
+  const bars = frames?.[selectedTf] || [];
+  if (bars.length < 3) {
+    box.innerHTML = `<div class="empty" style="padding:24px 0">이 종목의 ${TF_LABEL[selectedTf] || selectedTf} 캔들 자료가 아직 없습니다. 차트는 장 시작 전(08:20)과 마감 후(15:50) 하루 두 번 갱신됩니다.</div>`;
+    $("#chart-asof").textContent = "";
+    return;
+  }
+  box.innerHTML = buildCandleSVG(s, bars, false) + `<span class="chart-expand-hint">터치하면 확대 ⤢</span>`;
   const last = bars[bars.length - 1];
-  $("#chart-asof").textContent = last?.t ? `${TF_LABEL[selectedTf]} · ${dateTime(last.t)} 기준` : "";
+  $("#chart-asof").textContent = last?.t ? `${TF_LABEL[selectedTf]} · ${dateTime(last.t)} 기준 · 최근 60봉` : "";
+}
+
+function renderFsChart() {
+  const s = state?.stocks.find(x => x.code === selectedCode);
+  if (!s) return;
+  const bars = framesFor(s.code)?.[selectedTf] || [];
+  const box = $("#fs-chart");
+  if (bars.length < 3) {
+    box.innerHTML = `<div class="empty" style="padding:40px 0">이 시간대의 캔들 자료가 아직 없습니다.</div>`;
+    $("#fs-asof").textContent = "";
+    return;
+  }
+  box.innerHTML = buildCandleSVG(s, bars, true);
+  const last = bars[bars.length - 1];
+  $("#fs-title").textContent = `${s.name} · ${TF_LABEL[selectedTf]}`;
+  $("#fs-asof").textContent = last?.t ? `${dateTime(last.t)} 기준 · 최근 120봉` : "";
+}
+
+function openChartFullscreen() {
+  if (!selectedCode) return;
+  setupTfTabs(selectedCode);
+  renderFsChart();
+  const dlg = $("#chart-fs");
+  if (!dlg.open) dlg.showModal();
 }
 
 function openDetail(code) {
@@ -1399,14 +1469,19 @@ document.addEventListener("click", e => {
   }
   if (e.target.closest("#apply-position")) return applyPosition();
   if (e.target.closest(".refresh")) return loadLive(true);
-  const tf = e.target.closest("#tf-tabs [data-tf]");
+  const tf = e.target.closest("#tf-tabs [data-tf], #fs-tf-tabs [data-tf]");
   if (tf) {
     if (tf.disabled) return;
     selectedTf = tf.dataset.tf;
     const s = state?.stocks.find(x => x.code === selectedCode);
-    if (s) { setupTfTabs(selectedCode); renderIntradayChart(s); }
+    if (s) {
+      setupTfTabs(selectedCode);
+      renderIntradayChart(s);
+      if ($("#chart-fs").open) renderFsChart();
+    }
     return;
   }
+  if (e.target.closest("#intraday-chart")) return openChartFullscreen();
   const row = e.target.closest("[data-code]");
   if (row) openDetail(row.dataset.code);
 });
@@ -1419,6 +1494,8 @@ document.addEventListener("keydown", e => {
 
 $("#detail").addEventListener("click", e => { if (e.target === $("#detail")) $("#detail").close(); });
 $("#detail .close").addEventListener("click", () => $("#detail").close());
+$("#chart-fs").addEventListener("click", e => { if (e.target === $("#chart-fs")) $("#chart-fs").close(); });
+$("#fs-close").addEventListener("click", () => $("#chart-fs").close());
 $("#search").addEventListener("input", renderStocks);
 $("#action-filter").addEventListener("change", renderStocks);
 $("#export").addEventListener("click", downloadCSV);
