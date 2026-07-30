@@ -140,10 +140,11 @@ def _clean(bars: list[dict]) -> list[dict]:
     return out
 
 
-def from_yahoo_intraday(symbol: str) -> list[dict]:
-    """최근 약 5거래일의 60분봉. 진입구간·손절·목표선을 겹쳐 그리는 시간봉 차트용이다."""
+def from_yahoo_ohlc(symbol: str, interval: str, rng: str) -> list[dict]:
+    """지정한 간격·기간의 OHLCV 캔들을 가져온다.
+    interval 예: 15m, 30m, 60m, 1d, 1wk / rng 예: 60d, 2y, 5y."""
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
-    res = session.get(url, params={"range": "5d", "interval": "60m"}, timeout=15)
+    res = session.get(url, params={"range": rng, "interval": interval}, timeout=15)
     res.raise_for_status()
     result = (res.json().get("chart") or {}).get("result") or []
     if not result:
@@ -151,24 +152,54 @@ def from_yahoo_intraday(symbol: str) -> list[dict]:
     r = result[0]
     q = (r.get("indicators", {}).get("quote") or [{}])[0]
     stamps = r.get("timestamp") or []
+    n = len(stamps)
+    opens, highs, lows, closes, vols = (q.get(k) or [None] * n for k in ("open", "high", "low", "close", "volume"))
     bars = []
     for i, ts in enumerate(stamps):
-        c = (q.get("close") or [None] * len(stamps))[i]
-        o = (q.get("open") or [None] * len(stamps))[i]
-        h = (q.get("high") or [None] * len(stamps))[i]
-        lo = (q.get("low") or [None] * len(stamps))[i]
+        c = closes[i]
         if c is None:
             continue
+        o, h, lo = opens[i], highs[i], lows[i]
         bars.append({
             "t": datetime.fromtimestamp(ts, KST).isoformat(),
-            "o": round(o, 2) if o else round(c, 2),
-            "h": round(h, 2) if h else round(c, 2),
-            "l": round(lo, 2) if lo else round(c, 2),
-            "c": round(c, 2),
+            "o": round(o if o is not None else c),
+            "h": round(h if h is not None else c),
+            "l": round(lo if lo is not None else c),
+            "c": round(c),
+            "v": int(vols[i]) if vols[i] else 0,
         })
-    if len(bars) < 5:
-        raise ValueError(f"시간봉 부족({len(bars)}개)")
     return bars
+
+
+def resample_ohlc(bars: list[dict], factor: int) -> list[dict]:
+    """60분봉 등을 factor개씩 묶어 상위 시간봉(예: 4시간봉)을 만든다.
+    같은 거래일 안에서만 묶어, 하루 경계를 넘는 뭉치가 생기지 않게 한다."""
+    if factor <= 1 or not bars:
+        return bars
+    out, bucket = [], []
+
+    def flush():
+        if not bucket:
+            return
+        out.append({
+            "t": bucket[0]["t"],
+            "o": bucket[0]["o"],
+            "h": max(b["h"] for b in bucket),
+            "l": min(b["l"] for b in bucket),
+            "c": bucket[-1]["c"],
+            "v": sum(b.get("v", 0) for b in bucket),
+        })
+
+    cur_day = None
+    for b in bars:
+        day = b["t"][:10]
+        if day != cur_day or len(bucket) >= factor:
+            flush()
+            bucket = []
+            cur_day = day
+        bucket.append(b)
+    flush()
+    return out
 
 
 
@@ -204,6 +235,40 @@ def from_yahoo(symbol: str) -> dict | None:
         "volume_today": bars[-1]["volume"],
         "provider": "Yahoo Finance",
     }
+
+
+def from_naver_candles(code: str, timeframe: str) -> list[dict]:
+    """네이버 공개 JSON에서 일봉/주봉 OHLCV 캔들을 가져온다(야후가 막혔을 때 대체용).
+    timeframe: 'day' 또는 'week'. 분봉은 공개 엔드포인트가 없어 지원하지 않는다."""
+    days = 400 if timeframe == "day" else 1800
+    end = datetime.now(KST).strftime("%Y%m%d")
+    start = (datetime.now(KST) - timedelta(days=days)).strftime("%Y%m%d")
+    res = session.get(
+        "https://api.finance.naver.com/siseJson.naver",
+        params={"symbol": code, "requestType": 1, "startTime": start, "endTime": end, "timeframe": timeframe},
+        timeout=15,
+    )
+    res.raise_for_status()
+    text = res.text.strip()
+    if not text or text[0] not in "[{":
+        raise ValueError(f"예상치 못한 응답: {text[:40]!r}")
+    rows = json.loads(text.replace("'", '"'))
+    bars = []
+    for row in rows[1:]:
+        try:
+            d = str(row[0])
+            bars.append({
+                "t": f"{d[:4]}-{d[4:6]}-{d[6:8]}T00:00:00+09:00",
+                "o": round(float(row[1])), "h": round(float(row[2])),
+                "l": round(float(row[3])), "c": round(float(row[4])),
+                "v": int(float(row[5])),
+            })
+        except (IndexError, TypeError, ValueError):
+            continue
+    bars.sort(key=lambda b: b["t"])
+    if len(bars) < 3:
+        raise ValueError(f"캔들 부족({len(bars)}개)")
+    return bars
 
 
 def from_naver(symbol: str) -> dict | None:
@@ -837,42 +902,94 @@ def pct_kr(n: float) -> str:
 
 def is_intraday_run(now: datetime) -> bool:
     """장 시작 전(08시대)과 장 마감 직후(15시 48분 이후)에만 시간봉을 갱신한다.
-    57종목 전체의 시간봉을 20분마다 받으면 API 부담과 차단 위험이 커지기 때문이다."""
+    57종목 전체의 여러 시간봉을 20분마다 받으면 API 부담과 차단 위험이 커지기 때문이다."""
     return now.hour == 8 or (now.hour == 15 and now.minute >= 48)
 
 
+# 화면에서 고를 수 있는 시간대. 4시간봉은 야후가 직접 주지 않아 60분봉을 4개씩 묶어 만든다.
+# (interval, range, 리샘플 배수). 15·30분봉은 무료 API가 최근 약 60일까지만 제공한다.
+INTRADAY_TIMEFRAMES = [
+    ("15m", "15m", "60d", 1),
+    ("30m", "30m", "60d", 1),
+    ("60m", "60m", "2y", 1),
+    ("4h", "60m", "2y", 4),
+    ("1d", "1d", "2y", 1),
+    ("1wk", "1wk", "5y", 1),
+]
+INTRADAY_MAX_BARS = 200  # 시간대별 최근 이만큼만 저장(파일 크기 억제)
+
+
 def build_intraday(stocks: list[dict], sample: bool, now: datetime) -> dict:
-    bars_by_code: dict[str, list[dict]] = {}
+    by_code: dict[str, dict] = {}
     for s in stocks:
         code, market = s["code"], s["market"]
         if sample:
-            bars_by_code[code] = _sample_intraday(code, s["price"])
+            by_code[code] = _sample_intraday(code, s["price"])
             continue
         yahoo_symbol = f"{code}.{'KS' if market == 'KOSPI' else 'KQ'}"
-        try:
-            bars_by_code[code] = from_yahoo_intraday(yahoo_symbol)
-        except Exception as exc:  # noqa: BLE001 - 시간봉 실패는 표 갱신을 막지 않는다
-            note_error(f"{s['name']} 시간봉", f"{type(exc).__name__}: {exc}")
-        time.sleep(0.25)
-    return {"schema_version": SCHEMA_VERSION, "generated_at": now.isoformat(), "sample": sample, "bars": bars_by_code}
+        frames: dict[str, list[dict]] = {}
+        # 같은 interval을 여러 번 부르지 않도록 원본을 캐시한 뒤 필요하면 리샘플한다.
+        raw_cache: dict[tuple, list[dict]] = {}
+        for key, interval, rng, factor in INTRADAY_TIMEFRAMES:
+            try:
+                cache_key = (interval, rng)
+                if cache_key not in raw_cache:
+                    raw_cache[cache_key] = from_yahoo_ohlc(yahoo_symbol, interval, rng)
+                    time.sleep(0.2)
+                bars = resample_ohlc(raw_cache[cache_key], factor)
+                if len(bars) >= 3:
+                    frames[key] = bars[-INTRADAY_MAX_BARS:]
+            except Exception as exc:  # noqa: BLE001 - 한 시간대 실패가 다른 시간대를 막지 않는다
+                # 일봉·주봉은 야후가 막혀도 네이버로 대체한다(분봉은 공개 대체 경로 없음).
+                if key in ("1d", "1wk"):
+                    try:
+                        nb = from_naver_candles(code, "day" if key == "1d" else "week")
+                        frames[key] = nb[-INTRADAY_MAX_BARS:]
+                        time.sleep(0.2)
+                        continue
+                    except Exception as exc2:  # noqa: BLE001
+                        note_error(f"{s['name']} {key}", f"야후 실패 후 네이버도 실패: {type(exc2).__name__}: {exc2}")
+                        continue
+                note_error(f"{s['name']} {key}", f"{type(exc).__name__}: {exc}")
+        if frames:
+            by_code[code] = frames
+    return {"schema_version": SCHEMA_VERSION, "generated_at": now.isoformat(), "sample": sample,
+            "timeframes": [tf[0] for tf in INTRADAY_TIMEFRAMES], "bars": by_code}
 
 
-def _sample_intraday(code: str, last_price: float) -> list[dict]:
+def _sample_intraday(code: str, last_price: float) -> dict:
+    """시간대별 샘플 캔들. 실제 배포 전 화면 점검용이다."""
     rnd = random.Random(hash(code) % 100000)
     now = datetime.now(KST)
-    bars, price = [], last_price * 0.97
-    for day_back in range(4, -1, -1):
-        day = now - timedelta(days=day_back)
-        if day.weekday() >= 5:
-            continue
-        for hour in range(9, 16):
-            price *= 1 + rnd.gauss(0.0002, 0.006)
-            ts = day.replace(hour=hour, minute=0, second=0, microsecond=0)
-            bars.append({"t": ts.isoformat(), "o": round(price, 1), "h": round(price * 1.004, 1),
-                         "l": round(price * 0.996, 1), "c": round(price, 1)})
-    if bars:
-        bars[-1]["c"] = round(last_price, 1)
-    return bars
+    frames: dict[str, list[dict]] = {}
+
+    def gen(count: int, step: timedelta, vol: float, intraday: bool) -> list[dict]:
+        # now에서 과거로 유효 슬롯을 count개 모은 뒤, 시간순으로 되돌려 가격을 채운다.
+        slots, t = [], now
+        while len(slots) < count:
+            if not (intraday and (t.weekday() >= 5 or not (9 <= t.hour <= 15))):
+                slots.append(t)
+            t -= step
+        slots.reverse()
+        bars, price = [], last_price * 0.9
+        for ts in slots:
+            o = price
+            price *= 1 + rnd.gauss(0.0004, vol)
+            hi = max(o, price) * (1 + abs(rnd.gauss(0, vol * 0.5)))
+            lo = min(o, price) * (1 - abs(rnd.gauss(0, vol * 0.5)))
+            bars.append({"t": ts.replace(microsecond=0).isoformat(), "o": round(o), "h": round(hi),
+                         "l": round(lo), "c": round(price), "v": rnd.randint(50000, 3000000)})
+        if bars:
+            bars[-1]["c"] = round(last_price)
+        return bars
+
+    frames["15m"] = gen(80, timedelta(minutes=15), 0.004, True)
+    frames["30m"] = gen(80, timedelta(minutes=30), 0.005, True)
+    frames["60m"] = gen(90, timedelta(hours=1), 0.006, True)
+    frames["4h"] = gen(80, timedelta(hours=4), 0.010, True)
+    frames["1d"] = gen(120, timedelta(days=1), 0.016, False)
+    frames["1wk"] = gen(90, timedelta(weeks=1), 0.030, False)
+    return frames
 
 
 

@@ -272,18 +272,25 @@ dialog::backdrop{background:#0a121fa8}
 .level span{font-size:12px;color:var(--muted);font-weight:600}
 .level strong{display:block;font-size:14px;margin-top:3px;font-family:var(--font-mono)}
 .chart-box{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px}
-.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
+.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 .chart-head h4{font-size:13px;margin:0;font-weight:600}
 .chart-asof{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+.tf-tabs{display:flex;gap:3px;background:#efece1;border-radius:9px;padding:3px;margin-bottom:10px;overflow-x:auto}
+.tf-tabs button{border:0;background:transparent;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:#5c6570;white-space:nowrap;font-family:var(--font-mono)}
+.tf-tabs button.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(20,20,10,.14)}
+.tf-tabs button:disabled{opacity:.35;cursor:not-allowed}
 #intraday-chart{width:100%}
 #intraday-chart svg{width:100%;height:auto;display:block}
-.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)}
+.chart-legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:9px;font-size:11px;color:var(--muted)}
 .chart-legend span{display:inline-flex;align-items:center;gap:5px}
 .lg{width:14px;height:0;border-top:2px solid;display:inline-block}
-.lg-entry{border-top-style:solid;border-color:var(--signal-ink);opacity:.6}
+.lg-entry{border:0;width:12px;height:9px;background:var(--signal);opacity:.16;border-radius:2px}
 .lg-stop{border-color:var(--down);border-top-style:dashed}
 .lg-t1{border-color:var(--up);border-top-style:solid}
 .lg-t2{border-color:var(--up);border-top-style:dashed}
+.lg-now{border-color:var(--ink);border-top-style:solid}
+.lg-up{border:0;width:8px;height:11px;background:var(--up);border-radius:1px}
+.lg-down{border:0;width:8px;height:11px;background:var(--down);border-radius:1px}
 .w52-box{margin-top:14px;background:#f6f5ef;border-radius:12px;padding:14px}
 .w52-box .w52-head{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;font-family:var(--font-mono)}
 .w52-track{height:10px;background:#e5e2d5;border-radius:999px;position:relative}
@@ -490,7 +497,7 @@ dialog::backdrop{background:#0a121fa8}
             <div class="lesson"><h3>2. 국내 시장부터</h3><p>코스피·코스닥 카드의 색이 붉은 계열(위험 회피)이면 종목이 아무리 좋아 보여도 기준을 더 엄격히 봅니다.</p></div>
             <div class="lesson"><h3>3. 섹터로 좁히기</h3><p>'지금 강한 섹터'에서 평균 점수가 높은 업종 안의 종목을 먼저 봅니다. 업종 전체가 밀리는데 한 종목만 좋기는 어렵습니다.</p></div>
             <div class="lesson"><h3>4. 종목 점수와 위험</h3><p>종합점수, 손익비, 52주 위치를 함께 봅니다. 점수가 높아도 52주 신고가 바로 아래라면 추격 매수 위험이 있습니다.</p></div>
-            <div class="lesson"><h3>5. 시간봉으로 타이밍 확인</h3><p>종목 상세의 시간봉 차트에서 현재가가 진입 구간(연두색 띠) 안에 있는지, 손절선에 너무 가깝지 않은지 눈으로 확인합니다.</p></div>
+            <div class="lesson"><h3>5. 캔들 차트로 타이밍 확인</h3><p>종목 상세의 캔들 차트에서 현재가가 진입 구간(연두색 띠) 안에 있는지, 손절선에 너무 가깝지 않은지 눈으로 확인합니다. 큰 흐름은 일봉·주봉으로, 단기 진입 타이밍은 15분·1시간봉으로 나눠 보면 좋습니다.</p></div>
             <div class="lesson"><h3>6. 거래대금으로 확인</h3><p>거래대금 상위에 있다면 그만큼 많은 사람이 지켜보고 있다는 뜻입니다. 반대로 없다면 신호가 아직 얇을 수 있습니다.</p></div>
             <div class="lesson"><h3>7. 환율은 배경으로</h3><p>원/달러 환율이 계속 오르는 국면(원화 약세)에서는 외국인 자금이 국내 증시에서 빠져나가는 경향이 있다고 알려져 있습니다. 늘 그런 것은 아니지만 배경으로 참고하세요.</p></div>
             <div class="lesson"><h3>8. 판단 기록으로 검증</h3><p>이 순서를 거쳐도 결국 확률 게임입니다. '판단 기록' 화면에서 이 앱의 실제 성적을 주기적으로 확인하세요.</p></div>
@@ -536,7 +543,7 @@ dialog::backdrop{background:#0a121fa8}
             <div class="lesson"><h3>섹터 평균·시장 폭·거래대금</h3><p>개별 종목 점수와 별개로, 업종 전체와 시장 전체의 분위기를 보여줍니다. 종목 점수와 시장 분위기가 엇갈리면 더 보수적으로 접근하세요.</p></div>
             <div class="lesson"><h3>원/달러 환율</h3><p>외국인 수급에 영향을 주는 배경 지표입니다. 특정 종목의 판단에 직접 반영되지는 않습니다.</p></div>
             <div class="lesson"><h3>전일 미국 시장 요약</h3><p>S&P500·나스닥·다우·VIX·10년물 금리·업종 ETF 수치로 문장을 만드는 <b>규칙 기반 자동 요약</b>입니다. 생성형 AI가 그때그때 의견을 쓰는 것이 아니라, 이 앱의 다른 판단과 똑같은 방식입니다. 코스피 종목 점수에는 반영되지 않는 배경 정보입니다.</p></div>
-            <div class="lesson"><h3>시간봉 차트</h3><p>진입·손절·목표선을 겹쳐 보여주는 보조 도구입니다. 57종목 전체를 20분마다 받으면 부담이 커서 <b>하루 두 번(08:20, 15:50)</b>만 갱신됩니다. 표의 점수·판단은 지금처럼 20분마다 최신입니다.</p></div>
+            <div class="lesson"><h3>캔들 차트(6개 시간대)</h3><p>15분·30분·1시간·4시간·일봉·주봉 캔들에 진입 구간·손절·1·2차 목표선과 현재가를 겹쳐 보여줍니다. 57종목 전체를 20분마다 받으면 부담이 커서 <b>하루 두 번(08:20, 15:50)</b>만 갱신됩니다. 표의 점수·판단은 지금처럼 20분마다 최신입니다. 분봉은 야후에서만 받을 수 있어, 야후가 막히면 일봉·주봉만 네이버로 대체됩니다.</p></div>
           </div>
         </section>
 
@@ -563,13 +570,14 @@ dialog::backdrop{background:#0a121fa8}
             <ul><li>일부 지표가 실패해도 나머지로 요약합니다.</li><li>생성형 AI 실시간 호출이 아니라 계산 규칙입니다.</li><li>코스피 종목 점수에는 반영되지 않습니다.</li></ul>
           </section>
           <section class="connection-box">
-            <h3>시간봉 차트</h3>
-            <p>57종목의 60분봉을 하루 두 번만 받습니다. 20분마다 받으면 API 부담과 차단 위험이 커지기 때문입니다.</p>
-            <ol><li>08:20 (장 시작 전)</li><li>15:50 (장 마감 후)</li><li>점수·판단은 이와 별개로 20분마다 최신</li></ol>
+            <h3>캔들 차트</h3>
+            <p>15분·30분·1시간·4시간·일봉·주봉 캔들을 하루 두 번 받습니다. 4시간봉은 1시간봉을 4개씩 묶어 만듭니다.</p>
+            <ol><li>08:20 (장 시작 전) · 15:50 (장 마감 후)</li><li>분봉은 야후, 일봉·주봉은 야후 실패 시 네이버 대체</li><li>점수·판단은 이와 별개로 20분마다 최신</li></ol>
           </section>
         </div>
         <div class="code">점수·판단 갱신: 평일 09:05~15:45 한국시간, 20분 간격
 시간봉·미국 시장 갱신: 평일 08:20, 15:50 한국시간 (하루 2회)
+캔들 시간대: 15분·30분·1시간·4시간·일봉·주봉 (6종)
 지연 안내: GitHub 혼잡 시 실행이 5~30분 밀릴 수 있음
 브라우저: 화면을 다시 볼 때마다 새 파일이 있는지 확인
 안전장치: 장중 3시간 넘게 갱신이 없으면 판단 표시 중지
@@ -619,7 +627,7 @@ const COMPONENT = {
 };
 const ACTION_ORDER = ["BUY_REVIEW","HOLD","WAIT","REDUCE","SELL_REVIEW","STALE"];
 
-let state = null, history = null, intraday = null, loading = false, lastError = "", selectedCode = "", marketFilter = "";
+let state = null, history = null, intraday = null, loading = false, lastError = "", selectedCode = "", marketFilter = "", selectedTf = "1d";
 
 const store = {
   get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
@@ -1131,67 +1139,120 @@ function renderData() {
 
 /* ------------------------------------------------------------ 상세 화면 */
 
+const TF_LABEL = { "15m":"15분", "30m":"30분", "60m":"1시간", "4h":"4시간", "1d":"일봉", "1wk":"주봉" };
+
+function framesFor(code) {
+  // 신규 구조는 {code: {tf: [bars]}}. 옛 구조({code:[bars]})도 안전하게 처리한다.
+  const raw = intraday?.bars?.[code];
+  if (!raw) return null;
+  if (Array.isArray(raw)) return { "60m": raw };
+  return raw;
+}
+
+function setupTfTabs(code) {
+  const frames = framesFor(code) || {};
+  const avail = intraday?.timeframes || Object.keys(frames);
+  if (!avail.includes(selectedTf) || !(frames[selectedTf]?.length)) {
+    // 현재 선택한 시간대에 자료가 없으면, 자료가 있는 첫 시간대로 바꾼다.
+    selectedTf = (intraday?.timeframes || Object.keys(frames)).find(tf => frames[tf]?.length) || selectedTf;
+  }
+  $$("#tf-tabs [data-tf]").forEach(btn => {
+    const tf = btn.dataset.tf;
+    const has = !!(frames[tf]?.length);
+    btn.disabled = !has;
+    btn.classList.toggle("active", tf === selectedTf && has);
+    btn.setAttribute("aria-selected", tf === selectedTf && has ? "true" : "false");
+  });
+}
+
 function renderIntradayChart(s) {
   const box = $("#intraday-chart");
-  const bars = intraday?.bars?.[s.code] || [];
-  if (bars.length < 5) {
-    box.innerHTML = `<div class="empty" style="padding:24px 0">이 종목의 시간봉 자료가 아직 없습니다. 장 시작 전(08:20)과 마감 후(15:50) 하루 두 번만 갱신됩니다.</div>`;
+  const frames = framesFor(s.code);
+  const bars = frames?.[selectedTf] || [];
+  if (bars.length < 3) {
+    box.innerHTML = `<div class="empty" style="padding:24px 0">이 종목의 ${TF_LABEL[selectedTf] || selectedTf} 캔들 자료가 아직 없습니다. 차트는 장 시작 전(08:20)과 마감 후(15:50) 하루 두 번 갱신됩니다.</div>`;
     $("#chart-asof").textContent = "";
     return;
   }
-  const closes = bars.map(b => b.c).filter(Number.isFinite);
+
+  const W = 660, H = 300, ML = 58, MR = 12, MT = 10, MB = 20;
+  const volH = 46, gap = 8;
+  const priceH = H - MT - MB - volH - gap;
+  const plotW = W - ML - MR;
+  const n = bars.length;
+  const cw = Math.max(1.5, Math.min(11, plotW / n * 0.68));
+
   const refs = [s.entry_low, s.entry_high, s.stop, s.target1, s.target2, s.price].filter(Number.isFinite);
-  const lo0 = Math.min(...closes, ...refs), hi0 = Math.max(...closes, ...refs);
-  const pad = (hi0 - lo0) * 0.1 || hi0 * 0.02 || 1;
+  let lo0 = Math.min(...bars.map(b => b.l), ...refs);
+  let hi0 = Math.max(...bars.map(b => b.h), ...refs);
+  const pad = (hi0 - lo0) * 0.06 || hi0 * 0.02 || 1;
   const lo = lo0 - pad, hi = hi0 + pad;
+  const maxVol = Math.max(...bars.map(b => b.v || 0), 1);
 
-  const W = 640, H = 210, ML = 56, MR = 10, MT = 10, MB = 22;
-  const plotW = W - ML - MR, plotH = H - MT - MB;
-  const xAt = i => ML + (i / Math.max(1, bars.length - 1)) * plotW;
-  const yAt = v => MT + (1 - (v - lo) / (hi - lo)) * plotH;
+  const xAt = i => ML + (i + 0.5) / n * plotW;
+  const yAt = v => MT + (1 - (v - lo) / (hi - lo)) * priceH;
+  const volTop = MT + priceH + gap;
+  const vyAt = v => volTop + (1 - v / maxVol) * volH;
 
-  const linePts = closes.map((c, i) => `${xAt(i).toFixed(1)},${yAt(c).toFixed(1)}`).join(" ");
+  // 진입 구간 띠
+  const eTop = yAt(Math.max(s.entry_high, s.entry_low)), eBot = yAt(Math.min(s.entry_high, s.entry_low));
+  let svg = `<rect x="${ML}" y="${eTop.toFixed(1)}" width="${plotW}" height="${Math.max(1, eBot - eTop).toFixed(1)}" style="fill:var(--signal);opacity:.14"/>`;
 
-  let dayMarks = "";
-  let lastDate = "";
+  // 날짜/시간 구분선 + 라벨
+  const isIntradayTf = ["15m","30m","60m","4h"].includes(selectedTf);
+  let lastKey = "";
   bars.forEach((b, i) => {
-    const d = String(b.t).slice(0, 10);
-    if (d !== lastDate) {
-      lastDate = d;
-      const xx = xAt(i).toFixed(1);
-      dayMarks += `<line x1="${xx}" y1="${MT}" x2="${xx}" y2="${MT + plotH}" style="stroke:#e5e2d5;stroke-width:1"/>`;
-      dayMarks += `<text x="${xx}" y="${H - 6}" style="font:9px var(--font-mono);fill:#8b8878">${d.slice(5, 7)}/${d.slice(8, 10)}</text>`;
+    const key = String(b.t).slice(0, 10);
+    if (key !== lastKey) {
+      lastKey = key;
+      const xx = (xAt(i) - cw / 2).toFixed(1);
+      svg += `<line x1="${xx}" y1="${MT}" x2="${xx}" y2="${(MT + priceH).toFixed(1)}" style="stroke:#eceadf;stroke-width:1"/>`;
+      const lbl = isIntradayTf ? `${key.slice(5,7)}/${key.slice(8,10)}` : `${key.slice(2,4)}.${key.slice(5,7)}`;
+      svg += `<text x="${xx}" y="${(H - 6).toFixed(1)}" style="font:9px var(--font-mono);fill:#8b8878">${lbl}</text>`;
     }
   });
 
+  // 참고선
   const refLine = (val, color, dash, label) => {
+    if (!Number.isFinite(val)) return "";
     const yy = yAt(val).toFixed(1);
-    return `<line x1="${ML}" y1="${yy}" x2="${W - MR}" y2="${yy}" style="stroke:${color};stroke-width:1.4${dash ? `;stroke-dasharray:${dash}` : ""}"/>
-      <text x="${W - MR}" y="${(+yy - 3).toFixed(1)}" text-anchor="end" style="font:9px var(--font-mono);fill:${color}">${label}</text>`;
+    return `<line x1="${ML}" y1="${yy}" x2="${W - MR}" y2="${yy}" style="stroke:${color};stroke-width:1.3${dash ? `;stroke-dasharray:${dash}` : ""}"/>
+      <text x="${W - MR}" y="${(+yy - 3).toFixed(1)}" text-anchor="end" style="font:9px var(--font-mono);fill:${color}">${label} ${Math.round(val).toLocaleString("ko-KR")}</text>`;
   };
+  svg += refLine(s.stop, "var(--down)", "4,3", "손절");
+  svg += refLine(s.target1, "var(--up)", "", "1차");
+  svg += refLine(s.target2, "var(--up)", "4,3", "2차");
 
-  const entryTop = yAt(s.entry_high), entryBot = yAt(s.entry_low);
-  const entryBand = `<rect x="${ML}" y="${entryTop.toFixed(1)}" width="${plotW}" height="${Math.max(0, entryBot - entryTop).toFixed(1)}" style="fill:var(--signal);opacity:.1"/>`;
+  // 캔들 + 거래량 막대
+  bars.forEach((b, i) => {
+    const x = xAt(i);
+    const up = b.c >= b.o;
+    const col = up ? "var(--up)" : "var(--down)";
+    const yO = yAt(b.o), yC = yAt(b.c), yH = yAt(b.h), yL = yAt(b.l);
+    const top = Math.min(yO, yC), bh = Math.max(0.8, Math.abs(yC - yO));
+    svg += `<line x1="${x.toFixed(1)}" y1="${yH.toFixed(1)}" x2="${x.toFixed(1)}" y2="${yL.toFixed(1)}" style="stroke:${col};stroke-width:1"/>`;
+    svg += `<rect x="${(x - cw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${cw.toFixed(1)}" height="${bh.toFixed(1)}" style="fill:${col}"/>`;
+    if (b.v) {
+      const vy = vyAt(b.v);
+      svg += `<rect x="${(x - cw / 2).toFixed(1)}" y="${vy.toFixed(1)}" width="${cw.toFixed(1)}" height="${(volTop + volH - vy).toFixed(1)}" style="fill:${col};opacity:.35"/>`;
+    }
+  });
 
-  const yTicks = [hi0, (hi0 + lo0) / 2, lo0].map(v =>
-    `<text x="${ML - 6}" y="${(yAt(v) + 3).toFixed(1)}" text-anchor="end" style="font:9px var(--font-mono);fill:#8b8878">${Math.round(v).toLocaleString("ko-KR")}</text>`
-  ).join("");
+  // 현재가 선
+  svg += `<line x1="${ML}" y1="${yAt(s.price).toFixed(1)}" x2="${W - MR}" y2="${yAt(s.price).toFixed(1)}" style="stroke:var(--ink);stroke-width:1.4"/>
+    <rect x="${ML}" y="${(yAt(s.price) - 8).toFixed(1)}" width="52" height="15" rx="3" style="fill:var(--ink)"/>
+    <text x="${(ML + 26).toFixed(1)}" y="${(yAt(s.price) + 2.5).toFixed(1)}" text-anchor="middle" style="font:9px var(--font-mono);fill:#fff">${Math.round(s.price).toLocaleString("ko-KR")}</text>`;
 
-  const lastX = xAt(closes.length - 1), lastY = yAt(closes[closes.length - 1]);
+  // Y축 눈금
+  [hi0, (hi0 + lo0) / 2, lo0].forEach(v => {
+    svg += `<text x="${ML - 6}" y="${(yAt(v) + 3).toFixed(1)}" text-anchor="end" style="font:9px var(--font-mono);fill:#8b8878">${Math.round(v).toLocaleString("ko-KR")}</text>`;
+  });
+  svg += `<text x="${ML - 6}" y="${(volTop + 9).toFixed(1)}" text-anchor="end" style="font:8px var(--font-mono);fill:#b3ad9c">거래량</text>`;
 
-  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 시간봉 가격 추이와 진입·손절·목표 참고선">
-    ${entryBand}
-    ${refLine(s.stop, "var(--down)", "4,3", "손절")}
-    ${refLine(s.target1, "var(--up)", "", "1차")}
-    ${refLine(s.target2, "var(--up)", "4,3", "2차")}
-    ${dayMarks}
-    <polyline points="${linePts}" style="fill:none;stroke:var(--ink);stroke-width:1.8"/>
-    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3.2" style="fill:var(--ink)"/>
-    ${yTicks}
-  </svg>`;
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.name)} ${TF_LABEL[selectedTf]} 캔들 차트와 진입·손절·목표 참고선">${svg}</svg>`;
 
   const last = bars[bars.length - 1];
-  $("#chart-asof").textContent = last?.t ? `시간봉 기준 ${dateTime(last.t)}` : "";
+  $("#chart-asof").textContent = last?.t ? `${TF_LABEL[selectedTf]} · ${dateTime(last.t)} 기준` : "";
 }
 
 function openDetail(code) {
@@ -1231,9 +1292,20 @@ function openDetail(code) {
     </div>
 
     <div class="chart-box">
-      <div class="chart-head"><h4>시간봉 · 진입·손절·목표 참고선</h4><span id="chart-asof" class="chart-asof"></span></div>
-      <div id="intraday-chart"><div class="empty" style="padding:24px 0">시간봉 자료를 불러오는 중입니다</div></div>
+      <div class="chart-head"><h4>캔들 차트 · 진입·손절·목표 참고선</h4><span id="chart-asof" class="chart-asof"></span></div>
+      <div class="tf-tabs" id="tf-tabs" role="tablist" aria-label="시간대 선택">
+        <button data-tf="15m" role="tab">15분</button>
+        <button data-tf="30m" role="tab">30분</button>
+        <button data-tf="60m" role="tab">1시간</button>
+        <button data-tf="4h" role="tab">4시간</button>
+        <button data-tf="1d" role="tab">일봉</button>
+        <button data-tf="1wk" role="tab">주봉</button>
+      </div>
+      <div id="intraday-chart"><div class="empty" style="padding:24px 0">차트 자료를 불러오는 중입니다</div></div>
       <div class="chart-legend">
+        <span><i class="lg lg-up"></i>양봉(상승)</span>
+        <span><i class="lg lg-down"></i>음봉(하락)</span>
+        <span><i class="lg lg-now"></i>현재가</span>
         <span><i class="lg lg-entry"></i>진입 구간</span>
         <span><i class="lg lg-stop"></i>손절</span>
         <span><i class="lg lg-t1"></i>1차 목표</span>
@@ -1270,7 +1342,7 @@ function openDetail(code) {
   const dlg = $("#detail");
   if (!dlg.open) dlg.showModal();
   dlg.querySelector(".close").focus();
-  loadIntraday().then(() => { if (selectedCode === code) renderIntradayChart(s); });
+  loadIntraday().then(() => { if (selectedCode === code) { setupTfTabs(code); renderIntradayChart(s); } });
 }
 
 function applyPosition() {
@@ -1327,6 +1399,14 @@ document.addEventListener("click", e => {
   }
   if (e.target.closest("#apply-position")) return applyPosition();
   if (e.target.closest(".refresh")) return loadLive(true);
+  const tf = e.target.closest("#tf-tabs [data-tf]");
+  if (tf) {
+    if (tf.disabled) return;
+    selectedTf = tf.dataset.tf;
+    const s = state?.stocks.find(x => x.code === selectedCode);
+    if (s) { setupTfTabs(selectedCode); renderIntradayChart(s); }
+    return;
+  }
   const row = e.target.closest("[data-code]");
   if (row) openDetail(row.dataset.code);
 });
