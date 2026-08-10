@@ -82,8 +82,13 @@ main{grid-column:2;min-width:0}
 .view{display:none}
 .view.active{display:block}
 
-.sample-bar{background:#fdecea;color:#9a3a34;border:1px solid #f2c9c4;border-radius:12px;
-  padding:12px 15px;font-size:13px;font-weight:600;margin-bottom:16px}
+.sample-bar{background:#fdecea;color:#8a2f28;border:2px solid #e0857c;border-radius:12px;
+  padding:13px 16px;font-size:13px;margin-bottom:16px;position:sticky;top:74px;z-index:14;line-height:1.6}
+.sample-bar strong{display:block;font-size:14px;margin-bottom:5px}
+.sample-bar b{background:#ffffffb0;padding:1px 5px;border-radius:4px;font-family:var(--font-mono);font-size:12px}
+.is-sample .market-value::after,.is-sample .metric strong::after{content:" (가짜)";font-size:11px;color:#b8564c;font-weight:600;font-family:var(--font-body)}
+.sample-tag{display:inline-block;background:#fdecea;color:#8a2f28;border-radius:6px;padding:2px 7px;
+  font-size:11px;font-weight:700;margin-left:6px}
 .hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:18px;flex-wrap:wrap}
 .eyebrow{font-size:12px;letter-spacing:.08em;color:var(--signal-ink);font-weight:700;margin:0 0 6px}
 .hero h2{font-size:26px;line-height:1.3;letter-spacing:-.01em;margin:0;font-weight:600}
@@ -899,10 +904,15 @@ function render() {
 
 function renderSample() {
   const bar = $("#sample-bar");
-  if (state?.sample) {
+  const isSample = !!state?.sample;
+  document.body.classList.toggle("is-sample", isSample);
+  if (isSample) {
     bar.hidden = false;
     bar.className = "sample-bar";
-    bar.textContent = "샘플 데이터입니다. 실제 시세가 아니므로 어떤 판단에도 사용하지 마세요. GitHub Actions를 한 번 실행하면 실제 시세로 바뀝니다.";
+    bar.innerHTML = `<strong>⚠ 지금 보이는 숫자와 차트는 전부 가짜입니다</strong>
+      <span>실제 시세가 아직 한 번도 수집되지 않았습니다. 화면 점검용 임시 데이터라 코스피·코스닥 지수와 종목 가격이 실제와 전혀 다릅니다.
+      <b>저장소 Actions 탭 → Refresh market data → Run workflow</b>를 한 번 실행하면 실제 시세로 바뀝니다.
+      실행했는데도 이 띠가 남아 있다면 수집이 실패한 것이니 '데이터 상태' 화면에서 원인을 확인하세요.</span>`;
   } else {
     bar.hidden = true;
   }
@@ -938,8 +948,10 @@ function renderStatus() {
   }
 
   const badge = $("#live-badge");
-  badge.className = "badge " + cls;
-  badge.innerHTML = `<span class="blip" aria-hidden="true"></span>${esc(text)}`;
+  badge.className = "badge " + (state?.sample ? "stale" : cls);
+  badge.innerHTML = state?.sample
+    ? `<span class="blip" aria-hidden="true"></span>샘플 · 실제 시세 아님`
+    : `<span class="blip" aria-hidden="true"></span>${esc(text)}`;
 
   const pulseCls = f.level === "stale" ? "stale" : f.level === "warn" ? "warn" : "";
   const html = `<div class="status-main"><span class="pulse ${pulseCls}"></span><div><strong>${esc(title)}</strong><small>${detail}</small></div></div>
@@ -1567,7 +1579,7 @@ function renderChartReading(s, bars, targetId) {
     box.innerHTML = `<h4>차트 읽기</h4><p class="read-sub">캔들 자료가 충분하지 않아 해설을 만들 수 없습니다.</p>`;
     return;
   }
-  box.innerHTML = `<h4>차트 읽기 · ${TF_LABEL[selectedTf] || selectedTf}</h4>
+  box.innerHTML = `<h4>차트 읽기 · ${TF_LABEL[selectedTf] || selectedTf}${state?.sample ? `<span class="sample-tag">샘플이라 의미 없음</span>` : ""}</h4>
     <p class="read-sub">캔들 배열만 보고 계산한 참고 정보입니다. 종합점수에는 반영되지 않습니다.</p>
     ${items.map(it => `
       <details class="read-item${it.weak ? " weak" : ""}">
@@ -1693,7 +1705,12 @@ function buildCandleSVG(s, allBars, big) {
   });
   svg += `<text x="${ML - 6}" y="${(volTop + fs).toFixed(1)}" text-anchor="end" style="font:${fs - 1}px var(--font-mono);fill:#b3ad9c">거래량</text>`;
 
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.name)} ${TF_LABEL[selectedTf]} 캔들 차트">${svg}</svg>`;
+  if (state?.sample) {
+    svg += `<text x="${(ML + plotW / 2).toFixed(1)}" y="${(MT + priceH / 2).toFixed(1)}" text-anchor="middle"
+      style="font:700 ${big ? 46 : 30}px var(--font-display);fill:#c0392f;opacity:.16">샘플 · 실제 시세 아님</text>`;
+  }
+
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(s.name)} ${TF_LABEL[selectedTf]} 캔들 차트${state?.sample ? " (샘플 데이터)" : ""}">${svg}</svg>`;
 }
 
 function renderIntradayChart(s) {

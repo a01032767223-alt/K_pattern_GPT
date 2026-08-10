@@ -31,17 +31,17 @@ HISTORY_KEEP_DAYS = 180
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
 
 INDEXES = [
-    {"market": "KOSPI", "name": "코스피", "yahoo": "^KS11", "naver": "KOSPI"},
-    {"market": "KOSDAQ", "name": "코스닥", "yahoo": "^KQ11", "naver": "KOSDAQ"},
+    {"market": "KOSPI", "name": "코스피", "yahoo": "^KS11", "naver": "KOSPI", "sample_base": 6300.0},
+    {"market": "KOSDAQ", "name": "코스닥", "yahoo": "^KQ11", "naver": "KOSDAQ", "sample_base": 810.0},
 ]
 
 FX = {"name": "원/달러 환율", "yahoo": "KRW=X"}
 
 # 전일 미국 시장 참고 지표. 3대 지수 + 공포지수 + 국채금리 + 업종 대표 ETF.
 US_INDEXES = [
-    {"market": "SPX", "name": "S&P 500", "yahoo": "^GSPC", "stooq": "^spx"},
-    {"market": "NASDAQ", "name": "나스닥종합", "yahoo": "^IXIC", "stooq": "^ndq"},
-    {"market": "DOW", "name": "다우존스", "yahoo": "^DJI", "stooq": "^dji"},
+    {"market": "SPX", "name": "S&P 500", "yahoo": "^GSPC", "stooq": "^spx", "sample_base": 7700.0},
+    {"market": "NASDAQ", "name": "나스닥종합", "yahoo": "^IXIC", "stooq": "^ndq", "sample_base": 26300.0},
+    {"market": "DOW", "name": "다우존스", "yahoo": "^DJI", "stooq": "^dji", "sample_base": 49900.0},
 ]
 US_VIX = {"name": "VIX 변동성지수", "yahoo": "^VIX", "stooq": "^vix"}
 US_YIELD10Y = {"name": "美 10년물 국채금리", "yahoo": "^TNX"}
@@ -702,7 +702,7 @@ def summarize_history(history: dict) -> dict:
 def fetch_fx(sample: bool) -> dict | None:
     """원/달러 환율. 참고용 배경지표라 실패해도 전체 갱신을 막지 않는다."""
     if sample:
-        raw = sample_raw(4242, 1360.0, 0.0002)
+        raw = sample_raw(4242, 1410.0, 0.0002)
     else:
         try:
             raw = from_yahoo(FX["yahoo"])
@@ -790,7 +790,7 @@ def build_us_market(sample: bool) -> dict | None:
     indices, sectors = [], []
 
     for meta in US_INDEXES:
-        raw = sample_raw(hash(meta["market"]) % 7777, 5200.0) if sample else fetch_us(meta["name"], meta["yahoo"], meta.get("stooq"))
+        raw = sample_raw(hash(meta["market"]) % 7777, meta.get("sample_base", 6000.0)) if sample else fetch_us(meta["name"], meta["yahoo"], meta.get("stooq"))
         if raw:
             indices.append(build_market(meta, raw))
 
@@ -1019,11 +1019,16 @@ def _sample_intraday(code: str, last_price: float) -> dict:
 
 
 def sample_raw(seed: int, base: float, drift: float = 0.0) -> dict:
+    """base(오늘 시세로 알려진 값)에서 끝나도록 과거 260일을 거꾸로 흔들어 만든다.
+    시작점을 base로 고정하면 260일 랜덤워크가 누적되어 '오늘' 값이 base에서
+    크게 벗어나 버리므로, 끝점을 고정하고 과거만 흔든다."""
     rnd = random.Random(seed)
-    closes, price = [], base
-    for _ in range(260):
-        price *= 1 + rnd.gauss(0.0004 + drift, 0.016)
-        closes.append(round(price, 1))
+    walk, level = [1.0], 1.0
+    for _ in range(259):
+        level *= 1 + rnd.gauss(0.0004 + drift, 0.016)
+        walk.append(level)
+    scale = base / walk[-1]
+    closes = [round(w * scale, 1) for w in walk]
     today = datetime.now(KST)
     bars = []
     for i, c in enumerate(closes):
@@ -1057,7 +1062,7 @@ def main() -> int:
 
     markets, stocks = [], []
     for meta in INDEXES:
-        raw = sample_raw(hash(meta["market"]) % 9999, 2600.0) if sample else fetch_index(meta["name"], meta)
+        raw = sample_raw(hash(meta["market"]) % 9999, meta.get("sample_base", 6300.0)) if sample else fetch_index(meta["name"], meta)
         if not raw:
             print(f"지수 {meta['name']} 수집 실패. 기존 파일을 유지하고 종료합니다.", file=sys.stderr)
             return 1
