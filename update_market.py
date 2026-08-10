@@ -44,7 +44,7 @@ US_INDEXES = [
     {"market": "DOW", "name": "다우존스", "yahoo": "^DJI", "stooq": "^dji", "sample_base": 49900.0},
 ]
 US_VIX = {"name": "VIX 변동성지수", "yahoo": "^VIX", "stooq": "^vix"}
-US_YIELD10Y = {"name": "美 10년물 국채금리", "yahoo": "^TNX"}
+US_YIELD10Y = {"name": "美 10년물 국채금리", "yahoo": "^TNX", "stooq": "10yusy.b"}
 US_SECTORS = [
     {"name": "반도체(SMH)", "yahoo": "SMH", "stooq": "smh.us"},
     {"name": "금융", "yahoo": "XLF", "stooq": "xlf.us"},
@@ -803,12 +803,15 @@ def build_us_market(sample: bool) -> dict | None:
                "series": [round(c, 2) for c in closes[-30:]]}
 
     yield10y = None
-    raw = sample_raw(7717, 42.0, 0.0) if sample else fetch_us(US_YIELD10Y["name"], US_YIELD10Y["yahoo"])
+    raw = sample_raw(7717, 42.0, 0.0) if sample else fetch_us(US_YIELD10Y["name"], US_YIELD10Y["yahoo"], US_YIELD10Y.get("stooq"))
     if raw:
         closes = [b["close"] for b in raw["bars"]]
         prev = raw["prev_close"] or closes[-2]
-        # ^TNX는 10배 스케일(예: 42.3 = 4.23%)로 제공된다.
-        yield10y = {"value": round(raw["price"] / 10, 3), "change_pp": round((raw["price"] - prev) / 10, 3) if prev else 0.0}
+        # 야후(^TNX)는 10배 스케일(42.3 = 4.23%), Stooq(10yusy.b)는 그대로 4.23을 준다.
+        # 출처가 달라도 맞게 나오도록 값의 크기로 판별한다.
+        divisor = 10.0 if raw["price"] > 20 else 1.0
+        yield10y = {"value": round(raw["price"] / divisor, 3),
+                    "change_pp": round((raw["price"] - prev) / divisor, 3) if prev else 0.0}
 
     for meta in US_SECTORS:
         raw = sample_raw(hash(meta["name"]) % 5555, 150.0) if sample else fetch_us(meta["name"], meta["yahoo"], meta.get("stooq"))

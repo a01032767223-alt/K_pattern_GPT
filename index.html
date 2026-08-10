@@ -283,6 +283,38 @@ dialog::backdrop{background:#0a121fa8}
 .chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 .chart-head h4{font-size:13px;margin:0;font-weight:600}
 .chart-asof{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+.split-grid{grid-template-columns:1fr 1fr;gap:18px}
+.split-head{font-size:12px;font-weight:700;padding:5px 10px;border-radius:8px;margin-bottom:10px;display:inline-block;font-family:var(--font-display)}
+.split-head.kospi{background:#e9eefb;color:#2c4a8a}
+.split-head.kosdaq{background:#fdeee4;color:#8a4a1e}
+.versus{margin-bottom:16px}
+.vs-top{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-bottom:16px}
+.vs-side{text-align:center;border-radius:14px;padding:14px 10px;border:2px solid var(--line)}
+.vs-side.win{border-color:var(--signal);background:var(--signal-bg)}
+.vs-side small{display:block;font-size:12px;color:var(--muted);font-weight:700}
+.vs-side .vs-score{font-size:30px;font-family:var(--font-mono);font-weight:600;line-height:1.2;margin-top:3px}
+.vs-side .vs-tag{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;background:#fff;color:var(--muted)}
+.vs-side.win .vs-tag{background:var(--signal);color:#fff}
+.vs-mid{font-family:var(--font-display);font-size:15px;font-weight:700;color:var(--muted)}
+.vs-verdict{border-radius:12px;padding:13px 15px;font-size:14px;margin-bottom:14px;background:var(--alert-bg);color:var(--alert-ink)}
+.vs-verdict b{font-weight:700}
+.vs-row{display:grid;grid-template-columns:96px 1fr 1fr;gap:10px;align-items:center;padding:9px 0;border-top:1px solid #efece3;font-size:12px}
+.vs-row:first-of-type{border-top:0}
+.vs-label{font-weight:700;color:#3f4550}
+.vs-bar-wrap{display:flex;align-items:center;gap:7px}
+.vs-bar{flex:1;height:9px;background:#efece1;border-radius:999px;overflow:hidden}
+.vs-bar i{display:block;height:100%;border-radius:999px}
+.vs-bar.kospi i{background:#3f66c0}
+.vs-bar.kosdaq i{background:#d1793a}
+.vs-val{font-family:var(--font-mono);font-size:11px;font-weight:700;width:52px;text-align:right}
+.vs-note{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6}
+@media(max-width:660px){
+  .split-grid{grid-template-columns:1fr}
+  .vs-top{grid-template-columns:1fr auto 1fr;gap:8px}
+  .vs-side .vs-score{font-size:24px}
+  .vs-row{grid-template-columns:72px 1fr 1fr;gap:7px;font-size:11px}
+  .vs-val{width:44px}
+}
 .sample-tag{display:inline-block;margin-left:7px;font-size:10px;font-weight:700;color:#9a3a34;background:#fdecea;border-radius:5px;padding:2px 6px;vertical-align:middle}
 .tf-tabs{display:flex;gap:3px;background:#efece1;border-radius:9px;padding:3px;margin-bottom:10px;overflow-x:auto}
 .tf-tabs button{border:0;background:transparent;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:#5c6570;white-space:nowrap;font-family:var(--font-mono)}
@@ -443,24 +475,44 @@ dialog::backdrop{background:#0a121fa8}
           <div class="us-sectors" id="us-sectors"></div>
         </section>
         <div class="grid market-grid" id="market-cards"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+
+        <section class="card versus" id="versus-card">
+          <div class="card-head">
+            <div><h3>지금은 코스피와 코스닥, 어디가 더 유리할까요?</h3>
+            <p>다섯 가지를 각각 비교해 점수를 냅니다. 어느 쪽이 반드시 오른다는 뜻이 아니라, 지금 조건이 더 좋은 쪽을 알려드립니다.</p></div>
+          </div>
+          <div id="versus-body"><div class="empty">자료를 불러오는 중입니다</div></div>
+        </section>
+
         <div class="decision" id="market-decision">
           <div class="decision-copy"><div class="decision-icon">···</div><div><small>시장 해석</small><h3>판단에 필요한 자료를 확인하는 중입니다</h3></div></div>
         </div>
-        <div class="grid dashboard-grid">
-          <section class="card">
-            <div class="card-head"><div><h3>지금 먼저 볼 종목</h3><p>점수보다 이유와 위험을 함께 확인하세요.</p></div><button class="text-btn" data-go="stocks">전체 보기</button></div>
-            <div class="signal-list" id="home-signals"><div class="empty">자료를 불러오는 중입니다</div></div>
-          </section>
-          <section class="card">
-            <div class="card-head"><div><h3>강한 흐름 순위</h3><p>매수 순위가 아니라 살펴볼 순서입니다.</p></div><button class="text-btn" data-go="stocks">전체 보기</button></div>
-            <div class="leader-list" id="home-leaders"></div>
-          </section>
-        </div>
+
+        <section class="card">
+          <div class="card-head"><div><h3>지금 먼저 볼 종목</h3><p>시장별로 점수가 높은 5개씩입니다. 점수보다 이유와 위험을 함께 확인하세요.</p></div><button class="text-btn" data-go="stocks">전체 보기</button></div>
+          <div class="grid split-grid">
+            <div><div class="split-head kospi">코스피</div><div class="signal-list" id="home-signals-kospi"></div></div>
+            <div><div class="split-head kosdaq">코스닥</div><div class="signal-list" id="home-signals-kosdaq"></div></div>
+          </div>
+        </section>
+
+        <section class="card" style="margin-top:16px">
+          <div class="card-head"><div><h3>강한 흐름 순위</h3><p>시장별 상위 5개입니다. 매수 순위가 아니라 살펴볼 순서입니다.</p></div><button class="text-btn" data-go="stocks">전체 보기</button></div>
+          <div class="grid split-grid">
+            <div><div class="split-head kospi">코스피</div><div class="leader-list" id="home-leaders-kospi"></div></div>
+            <div><div class="split-head kosdaq">코스닥</div><div class="leader-list" id="home-leaders-kosdaq"></div></div>
+          </div>
+        </section>
+
+        <section class="card" style="margin-top:16px">
+          <div class="card-head"><div><h3>지금 강한 섹터</h3><p>시장별 상위 5개 업종입니다. 같은 업종끼리 묶어 평균 점수로 순위를 매깁니다.</p></div></div>
+          <div class="grid split-grid">
+            <div><div class="split-head kospi">코스피</div><div class="sector-list" id="sector-kospi"></div></div>
+            <div><div class="split-head kosdaq">코스닥</div><div class="sector-list" id="sector-kosdaq"></div></div>
+          </div>
+        </section>
+
         <div class="grid side-grid">
-          <section class="card">
-            <div class="card-head"><div><h3>지금 강한 섹터</h3><p>같은 업종끼리 묶어 평균 점수로 순위를 매깁니다.</p></div></div>
-            <div class="sector-list" id="sector-ranking"></div>
-          </section>
           <section class="card">
             <div class="card-head"><div><h3>거래대금 상위</h3><p>점수와 무관하게 오늘 돈이 몰린 종목입니다.</p></div></div>
             <div class="value-list" id="value-leaders"></div>
@@ -534,12 +586,13 @@ dialog::backdrop{background:#0a121fa8}
           <div class="grid lesson-grid">
             <div class="lesson"><h3>1. 전일 미국 시장</h3><p>화면 맨 위 '전일 미국 시장' 요약을 먼저 읽습니다. 미국이 크게 하락했거나 VIX가 불안 구간이면 오늘 코스피도 조심스러운 출발일 가능성이 있습니다.</p></div>
             <div class="lesson"><h3>2. 국내 시장부터</h3><p>코스피·코스닥 카드의 색이 붉은 계열(위험 회피)이면 종목이 아무리 좋아 보여도 기준을 더 엄격히 봅니다.</p></div>
-            <div class="lesson"><h3>3. 섹터로 좁히기</h3><p>'지금 강한 섹터'에서 평균 점수가 높은 업종 안의 종목을 먼저 봅니다. 업종 전체가 밀리는데 한 종목만 좋기는 어렵습니다.</p></div>
-            <div class="lesson"><h3>4. 종목 점수와 위험</h3><p>종합점수, 손익비, 52주 위치를 함께 봅니다. 점수가 높아도 52주 신고가 바로 아래라면 추격 매수 위험이 있습니다.</p></div>
-            <div class="lesson"><h3>5. 캔들 차트로 타이밍 확인</h3><p>종목 상세의 캔들 차트에서 현재가가 진입 구간(연두색 띠) 안에 있는지, 손절선에 너무 가깝지 않은지 눈으로 확인합니다. 차트를 터치하면 큰 화면으로 확대됩니다. 큰 흐름은 일봉·주봉으로, 단기 진입 타이밍은 15분·1시간봉으로 나눠 보면 좋습니다.</p></div>
-            <div class="lesson"><h3>6. 거래대금으로 확인</h3><p>거래대금 상위에 있다면 그만큼 많은 사람이 지켜보고 있다는 뜻입니다. 반대로 없다면 신호가 아직 얇을 수 있습니다.</p></div>
-            <div class="lesson"><h3>7. 환율은 배경으로</h3><p>원/달러 환율이 계속 오르는 국면(원화 약세)에서는 외국인 자금이 국내 증시에서 빠져나가는 경향이 있다고 알려져 있습니다. 늘 그런 것은 아니지만 배경으로 참고하세요.</p></div>
-            <div class="lesson"><h3>8. 판단 기록으로 검증</h3><p>이 순서를 거쳐도 결국 확률 게임입니다. '판단 기록' 화면에서 이 앱의 실제 성적을 주기적으로 확인하세요.</p></div>
+            <div class="lesson"><h3>3. 어느 시장이 유리한지</h3><p>'코스피 vs 코스닥' 카드에서 지금 조건이 더 좋은 쪽을 확인합니다. 점수 차이가 5점 미만이면 '비슷'으로 나오는데, 이때는 시장을 고르기보다 개별 종목을 보는 게 낫습니다. 차이가 크면 그쪽 시장 종목부터 살펴보세요. <b>단, 이건 예측이 아니라 현재 조건 비교입니다.</b></p></div>
+            <div class="lesson"><h3>4. 섹터로 좁히기</h3><p>'지금 강한 섹터'에서 평균 점수가 높은 업종 안의 종목을 먼저 봅니다. 업종 전체가 밀리는데 한 종목만 좋기는 어렵습니다.</p></div>
+            <div class="lesson"><h3>5. 종목 점수와 위험</h3><p>종합점수, 손익비, 52주 위치를 함께 봅니다. 점수가 높아도 52주 신고가 바로 아래라면 추격 매수 위험이 있습니다.</p></div>
+            <div class="lesson"><h3>6. 캔들 차트로 타이밍 확인</h3><p>종목 상세의 캔들 차트에서 현재가가 진입 구간(연두색 띠) 안에 있는지, 손절선에 너무 가깝지 않은지 눈으로 확인합니다. 차트를 터치하면 큰 화면으로 확대됩니다. 큰 흐름은 일봉·주봉으로, 단기 진입 타이밍은 15분·1시간봉으로 나눠 보면 좋습니다.</p></div>
+            <div class="lesson"><h3>7. 거래대금으로 확인</h3><p>거래대금 상위에 있다면 그만큼 많은 사람이 지켜보고 있다는 뜻입니다. 반대로 없다면 신호가 아직 얇을 수 있습니다.</p></div>
+            <div class="lesson"><h3>8. 환율은 배경으로</h3><p>원/달러 환율이 계속 오르는 국면(원화 약세)에서는 외국인 자금이 국내 증시에서 빠져나가는 경향이 있다고 알려져 있습니다. 늘 그런 것은 아니지만 배경으로 참고하세요.</p></div>
+            <div class="lesson"><h3>9. 판단 기록으로 검증</h3><p>이 순서를 거쳐도 결국 확률 게임입니다. '판단 기록' 화면에서 이 앱의 실제 성적을 주기적으로 확인하세요.</p></div>
           </div>
         </section>
 
@@ -893,6 +946,7 @@ function render() {
   renderStatus();
   renderUSMarket();
   renderMarkets();
+  renderVersus();
   renderSectors();
   renderValueLeaders();
   renderStocks();
@@ -964,7 +1018,7 @@ function renderStatus() {
 function renderFailure() {
   $("#market-cards").innerHTML = `<div class="empty" style="grid-column:1/-1">시세 파일(live-data.json)을 찾지 못했습니다. 저장소의 Actions에서 <b>Refresh market data</b>를 한 번 실행해 주세요.</div>`;
   $("#market-decision").innerHTML = `<div class="decision-copy"><div class="decision-icon">!</div><div><small>안전장치</small><h3>자료가 없어 아무 판단도 하지 않습니다</h3><p>${esc(lastError)}</p></div></div>`;
-  $("#home-signals").innerHTML = `<div class="empty">표시할 종목이 없습니다</div>`;
+  $("#home-signals-kospi").innerHTML = $("#home-signals-kosdaq").innerHTML = `<div class="empty">표시할 종목이 없습니다</div>`;
   $("#us-headline").textContent = "자료를 불러오지 못해 미국 시장 요약도 표시할 수 없습니다.";
 }
 
@@ -972,8 +1026,16 @@ function renderUSMarket() {
   const us = state?.us_market;
   const card = $("#us-brief-card");
   if (!us || !us.briefing) {
-    $("#us-headline").textContent = "미국 시장 자료를 아직 받지 못했습니다.";
-    $("#us-points").innerHTML = "";
+    // 왜 못 받았는지 알려준다. 미국 자료는 야후(1순위)·Stooq(2순위)에서만 받을 수 있어,
+    // 두 곳이 모두 막히면 이 칸이 빈다. 국내 시세와는 무관하므로 나머지 화면은 정상이다.
+    const usErrs = (state?.errors || []).filter(e =>
+      /S&P|나스닥|다우|VIX|10년물|반도체\(SMH\)|금융|에너지|헬스케어|소비재|커뮤니케이션/.test(e.item));
+    $("#us-headline").textContent = "전일 미국 시장 자료를 받지 못했습니다";
+    $("#us-points").innerHTML = `
+      <li>미국 자료는 야후 파이낸스와 Stooq에서만 받을 수 있는데, 두 곳 모두 응답하지 않았습니다.</li>
+      <li>GitHub 서버 주소가 야후에서 일시적으로 차단되면 이런 일이 생깁니다. 시간이 지나면 대개 스스로 회복됩니다.</li>
+      <li><b>국내 시세와 종목 판단은 이와 무관하게 정상입니다.</b> 아래 코스피·코스닥 정보는 그대로 사용하셔도 됩니다.</li>
+      ${usErrs.length ? `<li>기록된 실패 내용: ${usErrs.slice(0, 3).map(e => esc(e.item)).join(", ")} ${usErrs.length > 3 ? `외 ${usErrs.length - 3}건` : ""} (자세한 내용은 '데이터 상태' 화면)</li>` : ""}`;
     $("#us-strip").innerHTML = "";
     $("#us-sectors").innerHTML = "";
     $("#us-asof").textContent = "";
@@ -1061,20 +1123,118 @@ function renderMarkets() {
     </div>`;
 }
 
+/* 코스피 vs 코스닥: 다섯 항목을 각각 0~100으로 환산해 비교한다.
+   점수 자체가 수익률 예측이 아니라 '지금 조건이 어느 쪽에 유리한가'를 보여주는 상대 비교다. */
+function renderVersus() {
+  const box = $("#versus-body");
+  if (!state?.stocks?.length || !state?.markets?.length) {
+    box.innerHTML = `<div class="empty">자료를 불러오는 중입니다</div>`;
+    return;
+  }
+  const REGIME_PT = { RISK_ON: 100, NEUTRAL: 50, RISK_OFF: 10 };
+
+  const calc = market => {
+    const m = state.markets.find(x => x.market === market);
+    const list = state.stocks.filter(s => s.market === market);
+    const b = (state.breadth || {})[market];
+    if (!m || !list.length) return null;
+    const avgScore = list.reduce((a, s) => a + num(s.score), 0) / list.length;
+    const buyCnt = list.filter(s => actionFor(s).action === "BUY_REVIEW").length;
+    const advRatio = b && b.total ? b.advancers / b.total : 0;
+    const maRatio = b && b.total ? b.above_ma20 / b.total : 0;
+    const rel = list.reduce((a, s) => a + num(s.relative_strength), 0) / list.length;
+    return {
+      market, name: m.name || market, regime: m.regime, change_pct: m.change_pct,
+      metrics: {
+        regime:  { raw: m.regime,  pt: REGIME_PT[m.regime] ?? 50, text: LABEL[m.regime] || "-" },
+        breadth: { raw: advRatio,  pt: advRatio * 100,            text: b ? `${b.advancers}/${b.total} 상승` : "-" },
+        ma20:    { raw: maRatio,   pt: maRatio * 100,             text: b ? `${b.above_ma20}/${b.total}` : "-" },
+        score:   { raw: avgScore,  pt: Math.max(0, Math.min(100, avgScore)), text: `${avgScore.toFixed(1)}점` },
+        buy:     { raw: buyCnt,    pt: Math.min(100, buyCnt / Math.max(1, list.length) * 400), text: `${buyCnt}개` },
+      },
+      rel, count: list.length,
+    };
+  };
+
+  const a = calc("KOSPI"), b2 = calc("KOSDAQ");
+  if (!a || !b2) { box.innerHTML = `<div class="empty">비교할 자료가 부족합니다</div>`; return; }
+
+  // 가중치: 시장 추세를 가장 무겁게, 매수 후보 수를 가장 가볍게 본다.
+  const W = { regime: 0.30, breadth: 0.20, ma20: 0.20, score: 0.20, buy: 0.10 };
+  const total = side => Object.entries(W).reduce((sum, [k, w]) => sum + side.metrics[k].pt * w, 0);
+  const aT = total(a), bT = total(b2);
+  const diff = Math.abs(aT - bT);
+  const win = diff < 5 ? null : (aT > bT ? a : b2);
+  const lose = win === a ? b2 : win === b2 ? a : null;
+
+  const ROWS = [
+    ["regime", "지수 추세", "지수가 이동평균선 위에 있는지"],
+    ["breadth", "오른 종목 비율", "고르게 오르는지, 몇 종목만 오르는지"],
+    ["ma20", "20일선 위 비율", "단기 흐름이 살아 있는 종목 비중"],
+    ["score", "평균 종목 점수", "그 시장 종목들의 평균 체력"],
+    ["buy", "매수 검토 후보", "조건이 겹친 종목이 몇 개인지"],
+  ];
+
+  const verdict = win
+    ? `지금은 <b>${esc(win.name)}</b> 쪽 조건이 더 좋습니다. ${diff >= 15 ? "차이가 뚜렷한 편입니다." : "다만 차이가 크지는 않으니 한쪽으로 몰아넣기보다 나눠 담는 편이 낫습니다."}`
+    : `두 시장의 조건이 <b>비슷합니다</b>. 어느 한쪽이 확실히 낫다고 말하기 어려우니, 시장을 고르기보다 개별 종목의 근거를 보고 판단하세요.`;
+
+  const bothWeak = a.regime === "RISK_OFF" && b2.regime === "RISK_OFF";
+  const extra = bothWeak
+    ? "두 시장 모두 주요 이동평균선 아래입니다. 이럴 때는 '어디를 살까'보다 '얼마나 현금을 남길까'를 먼저 정하는 편이 안전합니다."
+    : "이 비교는 가격·거래량만 본 결과입니다. 실적 발표나 정책 변화 같은 요인은 반영되어 있지 않으니, 참고 자료로만 쓰세요.";
+
+  box.innerHTML = `
+    <div class="vs-top">
+      <div class="vs-side ${win === a ? "win" : ""}">
+        <small>코스피</small>
+        <div class="vs-score">${aT.toFixed(0)}</div>
+        <span class="vs-tag">${win === a ? "지금 더 유리" : win ? "상대적 열세" : "비슷"}</span>
+      </div>
+      <div class="vs-mid">VS</div>
+      <div class="vs-side ${win === b2 ? "win" : ""}">
+        <small>코스닥</small>
+        <div class="vs-score">${bT.toFixed(0)}</div>
+        <span class="vs-tag">${win === b2 ? "지금 더 유리" : win ? "상대적 열세" : "비슷"}</span>
+      </div>
+    </div>
+    <div class="vs-verdict">${verdict}</div>
+    ${ROWS.map(([key, label, help]) => {
+      const pa = a.metrics[key], pb = b2.metrics[key];
+      const aWin = pa.pt > pb.pt + 1, bWin = pb.pt > pa.pt + 1;
+      return `<div class="vs-row" title="${esc(help)}">
+        <span class="vs-label">${esc(label)}</span>
+        <span class="vs-bar-wrap"><div class="vs-bar kospi"><i style="width:${Math.max(2, Math.min(100, pa.pt)).toFixed(0)}%"></i></div>
+          <span class="vs-val"${aWin ? ' style="color:var(--signal-ink)"' : ""}>${esc(pa.text)}</span></span>
+        <span class="vs-bar-wrap"><div class="vs-bar kosdaq"><i style="width:${Math.max(2, Math.min(100, pb.pt)).toFixed(0)}%"></i></div>
+          <span class="vs-val"${bWin ? ' style="color:var(--signal-ink)"' : ""}>${esc(pb.text)}</span></span>
+      </div>`;
+    }).join("")}
+    <div class="vs-note">왼쪽 파란 막대가 코스피, 오른쪽 주황 막대가 코스닥입니다. ${esc(extra)}</div>`;
+}
+
 function renderSectors() {
-  if (!state?.sector_ranking) { $("#sector-ranking").innerHTML = `<div class="empty">자료를 불러오는 중입니다</div>`; return; }
-  const rows = state.sector_ranking.slice(0, 8);
+  const rows = state?.sector_ranking;
+  if (!rows) {
+    $("#sector-kospi").innerHTML = $("#sector-kosdaq").innerHTML = `<div class="empty">자료를 불러오는 중입니다</div>`;
+    return;
+  }
   const max = Math.max(...rows.map(r => r.avg_score), 1);
-  $("#sector-ranking").innerHTML = rows.map(r => `
-    <div class="sector-row">
-      <span class="market-tag">${r.market === "KOSPI" ? "코" : "닥"}</span>
-      <span>
-        <span class="sector-name">${esc(r.sector)}</span>
-        <div class="sector-bar-wrap"><div class="sector-bar"><i style="width:${(r.avg_score / max * 100).toFixed(0)}%"></i></div>
-        ${r.buy_count ? `<span class="sector-buy">매수 ${r.buy_count}</span>` : ""}</div>
-      </span>
-      <span class="sector-score">${r.avg_score.toFixed(1)}</span>
-    </div>`).join("");
+  const draw = (market, sel) => {
+    const list = rows.filter(r => r.market === market).slice(0, 5);
+    $(sel).innerHTML = list.length ? list.map((r, i) => `
+      <div class="sector-row">
+        <span class="rank ${i < 3 ? "top" : ""}" aria-hidden="true">${i + 1}</span>
+        <span>
+          <span class="sector-name">${esc(r.sector)}</span>
+          <div class="sector-bar-wrap"><div class="sector-bar"><i style="width:${(r.avg_score / max * 100).toFixed(0)}%"></i></div>
+          ${r.buy_count ? `<span class="sector-buy">매수 ${r.buy_count}</span>` : ""}</div>
+        </span>
+        <span class="sector-score">${r.avg_score.toFixed(1)}</span>
+      </div>`).join("") : `<div class="empty">해당 업종 자료가 없습니다</div>`;
+  };
+  draw("KOSPI", "#sector-kospi");
+  draw("KOSDAQ", "#sector-kosdaq");
 }
 
 function renderValueLeaders() {
@@ -1107,7 +1267,10 @@ function renderStocks() {
     const da = ACTION_ORDER.indexOf(actionFor(a).action), db = ACTION_ORDER.indexOf(actionFor(b).action);
     return da !== db ? da - db : b.score - a.score;
   });
-  $("#home-signals").innerHTML = sorted.slice(0, 4).map(rowCard).join("");
+  const kospi5 = sorted.filter(s => s.market === "KOSPI").slice(0, 5);
+  const kosdaq5 = sorted.filter(s => s.market === "KOSDAQ").slice(0, 5);
+  $("#home-signals-kospi").innerHTML = kospi5.length ? kospi5.map(rowCard).join("") : `<div class="empty">표시할 종목이 없습니다</div>`;
+  $("#home-signals-kosdaq").innerHTML = kosdaq5.length ? kosdaq5.map(rowCard).join("") : `<div class="empty">표시할 종목이 없습니다</div>`;
 
   const q = $("#search").value.trim().toLowerCase();
   const action = $("#action-filter").value;
@@ -1158,12 +1321,18 @@ function renderStocks() {
 
 function renderLeaders() {
   if (!state) return;
-  $("#home-leaders").innerHTML = [...state.stocks].sort((a, b) => b.score - a.score).slice(0, 6).map((s, i) => `
-    <button class="leader" data-code="${esc(s.code)}">
-      <span class="rank ${i < 3 ? "top" : ""}" aria-hidden="true">${i + 1}</span>
-      <span><strong>${esc(s.name)}</strong><small>${esc(s.sector)} · ${esc(s.market)}</small></span>
-      <span class="leader-score"><strong>${num(s.score).toFixed(1)}</strong><small class="${s.relative_strength >= 0 ? "up" : "down"}">시장대비 ${pct(s.relative_strength)}</small></span>
-    </button>`).join("");
+  const draw = (market, sel) => {
+    const list = [...state.stocks].filter(s => s.market === market)
+      .sort((a, b) => b.score - a.score).slice(0, 5);
+    $(sel).innerHTML = list.length ? list.map((s, i) => `
+      <button class="leader" data-code="${esc(s.code)}">
+        <span class="rank ${i < 3 ? "top" : ""}" aria-hidden="true">${i + 1}</span>
+        <span><strong>${esc(s.name)}</strong><small>${esc(s.sector)}</small></span>
+        <span class="leader-score"><strong>${num(s.score).toFixed(1)}</strong><small class="${s.relative_strength >= 0 ? "up" : "down"}">시장대비 ${pct(s.relative_strength)}</small></span>
+      </button>`).join("") : `<div class="empty">표시할 종목이 없습니다</div>`;
+  };
+  draw("KOSPI", "#home-leaders-kospi");
+  draw("KOSDAQ", "#home-leaders-kosdaq");
 }
 
 function renderLearn() {
