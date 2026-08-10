@@ -921,40 +921,60 @@ INTRADAY_TIMEFRAMES = [
 INTRADAY_MAX_BARS = 200  # 시간대별 최근 이만큼만 저장(파일 크기 억제)
 
 
-def build_intraday(stocks: list[dict], sample: bool, now: datetime) -> dict:
+def _collect_frames(label: str, yahoo_symbol: str, naver_code: str | None) -> dict[str, list[dict]]:
+    """한 심볼의 6개 시간대 캔들을 모은다. 일봉·주봉은 야후 실패 시 네이버로 대체한다."""
+    frames: dict[str, list[dict]] = {}
+    # 같은 interval을 여러 번 부르지 않도록 원본을 캐시한 뒤 필요하면 리샘플한다.
+    raw_cache: dict[tuple, list[dict]] = {}
+    for key, interval, rng, factor in INTRADAY_TIMEFRAMES:
+        try:
+            cache_key = (interval, rng)
+            if cache_key not in raw_cache:
+                raw_cache[cache_key] = from_yahoo_ohlc(yahoo_symbol, interval, rng)
+                time.sleep(0.2)
+            bars = resample_ohlc(raw_cache[cache_key], factor)
+            if len(bars) >= 3:
+                frames[key] = bars[-INTRADAY_MAX_BARS:]
+        except Exception as exc:  # noqa: BLE001 - 한 시간대 실패가 다른 시간대를 막지 않는다
+            # 일봉·주봉은 야후가 막혀도 네이버로 대체한다(분봉은 공개 대체 경로 없음).
+            if key in ("1d", "1wk") and naver_code:
+                try:
+                    nb = from_naver_candles(naver_code, "day" if key == "1d" else "week")
+                    frames[key] = nb[-INTRADAY_MAX_BARS:]
+                    time.sleep(0.2)
+                    continue
+                except Exception as exc2:  # noqa: BLE001
+                    note_error(f"{label} {key}", f"야후 실패 후 네이버도 실패: {type(exc2).__name__}: {exc2}")
+                    continue
+            note_error(f"{label} {key}", f"{type(exc).__name__}: {exc}")
+    return frames
+
+
+def build_intraday(stocks: list[dict], markets: list[dict], sample: bool, now: datetime) -> dict:
     by_code: dict[str, dict] = {}
+
+    # 개별 종목
     for s in stocks:
         code, market = s["code"], s["market"]
         if sample:
             by_code[code] = _sample_intraday(code, s["price"])
             continue
         yahoo_symbol = f"{code}.{'KS' if market == 'KOSPI' else 'KQ'}"
-        frames: dict[str, list[dict]] = {}
-        # 같은 interval을 여러 번 부르지 않도록 원본을 캐시한 뒤 필요하면 리샘플한다.
-        raw_cache: dict[tuple, list[dict]] = {}
-        for key, interval, rng, factor in INTRADAY_TIMEFRAMES:
-            try:
-                cache_key = (interval, rng)
-                if cache_key not in raw_cache:
-                    raw_cache[cache_key] = from_yahoo_ohlc(yahoo_symbol, interval, rng)
-                    time.sleep(0.2)
-                bars = resample_ohlc(raw_cache[cache_key], factor)
-                if len(bars) >= 3:
-                    frames[key] = bars[-INTRADAY_MAX_BARS:]
-            except Exception as exc:  # noqa: BLE001 - 한 시간대 실패가 다른 시간대를 막지 않는다
-                # 일봉·주봉은 야후가 막혀도 네이버로 대체한다(분봉은 공개 대체 경로 없음).
-                if key in ("1d", "1wk"):
-                    try:
-                        nb = from_naver_candles(code, "day" if key == "1d" else "week")
-                        frames[key] = nb[-INTRADAY_MAX_BARS:]
-                        time.sleep(0.2)
-                        continue
-                    except Exception as exc2:  # noqa: BLE001
-                        note_error(f"{s['name']} {key}", f"야후 실패 후 네이버도 실패: {type(exc2).__name__}: {exc2}")
-                        continue
-                note_error(f"{s['name']} {key}", f"{type(exc).__name__}: {exc}")
+        frames = _collect_frames(s["name"], yahoo_symbol, code)
         if frames:
             by_code[code] = frames
+
+    # 코스피·코스닥 지수도 같은 구조로 담는다(키는 IDX:KOSPI 형태).
+    for meta in INDEXES:
+        key = f"IDX:{meta['market']}"
+        if sample:
+            base = next((m["close"] for m in markets if m["market"] == meta["market"]), 2500.0)
+            by_code[key] = _sample_intraday(key, base)
+            continue
+        frames = _collect_frames(meta["name"], meta["yahoo"], meta["naver"])
+        if frames:
+            by_code[key] = frames
+
     return {"schema_version": SCHEMA_VERSION, "generated_at": now.isoformat(), "sample": sample,
             "timeframes": [tf[0] for tf in INTRADAY_TIMEFRAMES], "bars": by_code}
 
@@ -1069,10 +1089,11 @@ def main() -> int:
 
     do_intraday = sample or force_intraday or is_intraday_run(now)
     if do_intraday:
-        intraday = build_intraday(stocks, sample, now)
+        intraday = build_intraday(stocks, markets, sample, now)
         INTRADAY_FILE.write_text(json.dumps(intraday, ensure_ascii=False, separators=(",", ":")), "utf-8")
-        got = sum(1 for v in intraday["bars"].values() if v)
-        print(f"시간봉 갱신: {got}/{len(stocks)}종목 → {INTRADAY_FILE.name}")
+        got = sum(1 for k, v in intraday["bars"].items() if v and not k.startswith("IDX:"))
+        idx_got = sum(1 for k, v in intraday["bars"].items() if v and k.startswith("IDX:"))
+        print(f"캔들 갱신: 종목 {got}/{len(stocks)} · 지수 {idx_got}/{len(INDEXES)} → {INTRADAY_FILE.name}")
 
     payload = {
         "schema_version": SCHEMA_VERSION,

@@ -121,6 +121,9 @@ main{grid-column:2;min-width:0}
 .down{color:var(--down)}
 .market-explain{font-size:12px;color:var(--muted);margin-top:6px;font-family:var(--font-body)}
 .market-breadth{font-size:11px;color:var(--muted);margin-top:7px;font-family:var(--font-mono)}
+.market-card.clickable{cursor:pointer;transition:border-color .15s}
+.market-card.clickable:hover{border-color:#c7c2b2;background:#fdfdfb}
+.market-more{font-size:11px;color:var(--alert-ink);font-weight:700;margin-top:8px}
 .us-brief{margin-bottom:16px}
 .us-headline{font-family:var(--font-display);font-size:16px;font-weight:600;margin:2px 0 9px;line-height:1.4}
 .us-points{margin:0;padding-left:18px;font-size:13px;color:#3f4550}
@@ -301,6 +304,26 @@ dialog::backdrop{background:#0a121fa8}
 .lg-now{border-color:var(--ink);border-top-style:solid}
 .lg-up{border:0;width:8px;height:11px;background:var(--up);border-radius:1px}
 .lg-down{border:0;width:8px;height:11px;background:var(--down);border-radius:1px}
+.lg-vp{border:0;width:12px;height:9px;background:#7d8794;opacity:.3;border-radius:2px}
+.lg-spike{border:0;width:8px;height:8px;background:var(--up);border-radius:50%}
+.read-box{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:14px}
+.read-box > h4{font-size:13px;margin:0 0 3px;font-weight:600}
+.read-box > p.read-sub{font-size:11px;color:var(--muted);margin:0 0 11px}
+.read-item{border-top:1px solid #f0eee5}
+.read-item:first-of-type{border-top:0}
+.read-item summary{list-style:none;cursor:pointer;padding:9px 2px;display:flex;align-items:center;gap:9px}
+.read-item summary::-webkit-details-marker{display:none}
+.read-item summary::after{content:"▾";margin-left:auto;color:#a39d8c;font-size:11px;flex:none}
+.read-item[open] summary::after{content:"▴"}
+.read-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.read-dot.good{background:var(--signal)}
+.read-dot.warn{background:var(--amber)}
+.read-dot.flat{background:#b9b3a2}
+.read-name{font-size:12px;font-weight:700;flex:none;min-width:104px}
+.read-head{font-size:12px;color:#3f4550;min-width:0}
+.read-item.weak .read-name,.read-item.weak .read-head{opacity:.72}
+.read-body{font-size:12px;color:#5c6570;padding:0 2px 11px 26px;line-height:1.65;margin:0}
+.read-note{font-size:11px;color:var(--muted);margin:9px 0 0;padding-top:9px;border-top:1px solid #f0eee5}
 .w52-box{margin-top:14px;background:#f6f5ef;border-radius:12px;padding:14px}
 .w52-box .w52-head{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;font-family:var(--font-mono)}
 .w52-track{height:10px;background:#e5e2d5;border-radius:999px;position:relative}
@@ -533,6 +556,21 @@ dialog::backdrop{background:#0a121fa8}
           <section class="card lesson"><h3>1차·2차 목표, 어떻게 쓰나요</h3><p>1차 목표에 닿으면 절반쯤 정리해 이익을 확정 짓고, 나머지는 손절가를 매입가 부근으로 올려둔 채 2차 목표까지 지켜보는 방법을 많이 씁니다. 반드시 지켜야 하는 규칙은 아니지만, 다 오르길 기다리다 되돌림을 맞는 것보다 낫습니다.</p></section>
           <section class="card lesson"><h3>반드시 피할 행동</h3><ul><li>많이 올랐다는 이유만으로 따라 사기</li><li>손절 기준 없이 계속 물타기</li><li>한 종목에 투자금 몰아넣기</li><li>대출금이나 생활비로 투자하기</li><li>이 앱의 판단을 확정된 수익으로 믿기</li></ul></section>
         </div>
+
+        <section class="card" style="margin-top:16px">
+          <div class="card-head"><div><h3>'차트 읽기' 항목은 무슨 뜻인가요</h3><p>종목·지수 차트 아래에 나오는 해설을 하나씩 풀어 설명합니다.</p></div></div>
+          <div class="grid lesson-grid">
+            <div class="lesson"><h3>거래량 동반 반등</h3><p>바닥에서 올라올 때 <b>거래가 함께 늘었는지</b>를 봅니다. 사는 사람이 실제로 들어와야 반등이 오래갑니다. 거래 없이 오른 것은 팔 사람이 잠깐 없어서일 수 있어 되밀리기 쉽습니다. 여덟 항목 중 초보자에게 가장 실용적입니다.</p></div>
+            <div class="lesson"><h3>박스권 상단 돌파</h3><p>한동안 일정한 폭 안에서만 오르내리는 구간을 박스권이라 합니다. 그 위쪽 벽을 넘으면 새 흐름의 시작일 수 있지만, 넘자마자 다시 떨어지는 '속임수 돌파'도 흔합니다. 거래량이 함께 늘었는지 꼭 같이 보세요.</p></div>
+            <div class="lesson"><h3>전고점 돌파</h3><p>이전에 막혔던 고점을 넘었는지 봅니다. 넘으면 위에 파려는 물량이 적어 가볍게 오를 수 있습니다. 다만 신고가에서는 기댈 지지선이 없어, 틀렸을 때 얼마나 빠질지 미리 정해두는 일이 더 중요해집니다.</p></div>
+            <div class="lesson"><h3>되돌림 폭</h3><p>올랐던 만큼 중 얼마나 다시 내려왔는지입니다. 38.2%·50%·61.8%를 중요하게 보는 사람이 많아 그 부근을 알려주지만, <b>그 자리에서 반드시 반등한다는 근거는 없습니다.</b> 깊이 되돌릴수록 상승 흐름 자체가 깨졌을 가능성도 함께 커집니다.</p></div>
+            <div class="lesson"><h3>저점 수준</h3><p>밀릴 때마다 <b>더 높은 자리에서 받쳐주는지</b>를 봅니다. 저점이 계단식으로 올라가면 사려는 쪽이 버티는 것이고, 계속 낮아지면 하락 흐름이 이어지는 전형적인 모습입니다.</p></div>
+            <div class="lesson"><h3>매물대</h3><p>가격대별로 거래가 얼마나 많았는지를 차트 오른쪽 회색 막대로 보여줍니다. 두꺼운 구간은 그 가격에 산 사람이 많다는 뜻이라, <b>위쪽이면 저항, 아래쪽이면 지지</b>가 되는 경향이 있습니다. 다만 실제 체결 자료가 아니라 봉으로 계산한 근사치입니다.</p></div>
+            <div class="lesson"><h3>이동평균 배열</h3><p>단기·중기·장기 평균선이 위에서부터 순서대로 늘어서면 정배열(상승 흐름), 거꾸로면 역배열(하락 흐름)입니다. 뒤엉켜 있으면 방향이 정해지지 않은 구간입니다.</p></div>
+            <div class="lesson"><h3>채널 이탈 <span style="font-weight:400;color:var(--muted)">(참고용)</span></h3><p>추세선 위아래로 얼마나 벌어졌는지를 봅니다. <b>이 항목만 흐리게 표시한 이유가 있습니다.</b> 채널은 어느 구간·어느 고점을 잡느냐에 따라 결과가 달라져 사람마다 다르게 그립니다. 매매 근거로 삼기보다 분위기 참고로만 쓰세요.</p></div>
+          </div>
+          <div class="notice"><span>!</span><span>여덟 항목은 <b>서로 엇갈릴 때가 많습니다.</b> 예를 들어 전고점은 넘었는데 거래량이 안 붙었다면, 둘 중 하나가 틀린 게 아니라 '아직 확실하지 않다'는 뜻입니다. 여러 항목이 같은 방향을 가리킬 때가 그나마 신뢰도가 높습니다. 그리고 짧은 시간대(15·30분)일수록 신호가 자주 뒤집히니, 큰 흐름은 일봉·주봉으로 함께 보세요.</span></div>
+        </section>
       </section>
 
       <section class="view" id="view-method">
@@ -639,7 +677,10 @@ dialog::backdrop{background:#0a121fa8}
     <span><i class="lg lg-stop"></i>손절</span>
     <span><i class="lg lg-t1"></i>1차 목표</span>
     <span><i class="lg lg-t2"></i>2차 목표</span>
+    <span><i class="lg lg-vp"></i>매물대</span>
+    <span><i class="lg lg-spike"></i>거래량 급증</span>
   </div>
+  <div class="read-box" id="fs-reading" style="margin:0 20px 20px"></div>
 </dialog>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -957,13 +998,14 @@ function renderMarkets() {
     const up = m.change_pct >= 0;
     const b = breadth[m.market];
     const breadthLine = b ? `상승 ${b.advancers} · 하락 ${b.decliners} · 20일선 위 ${b.above_ma20}/${b.total}` : "";
-    return `<article class="market-card">
+    return `<article class="market-card clickable" data-index="${esc(m.market)}" role="button" tabindex="0" aria-label="${esc(m.name || m.market)} 차트 보기">
       <div>
         <div class="market-head"><strong>${esc(m.name || m.market)}</strong><span class="regime ${esc(m.regime)}">${LABEL[m.regime] || ""}</span></div>
         <div class="market-value">${num(m.close).toLocaleString("ko-KR", { maximumFractionDigits:2 })}</div>
         <div class="change ${up ? "up" : "down"}">${up ? "▲" : "▼"} ${Math.abs(num(m.change)).toLocaleString("ko-KR", { maximumFractionDigits:2 })} · ${pct(m.change_pct)}</div>
         <div class="market-explain">${marketExplain(m)}</div>
         ${breadthLine ? `<div class="market-breadth">${breadthLine}</div>` : ""}
+        <div class="market-more">캔들 차트와 해설 보기 ›</div>
       </div>${spark(m.series, i)}</article>`;
   });
   if (state.fx) {
@@ -1201,6 +1243,340 @@ function setupTfTabs(code) {
 }
 
 /* 캔들 SVG 문자열을 만든다. big=true면 전체화면용(더 크고, 캔들·글자·여백을 키운다). */
+/* ============================================================
+   차트 읽기 엔진 — 캔들 배열만 보고 7가지를 계산한다.
+   전부 확인 가능한 계산 규칙이며, 100점 점수에는 넣지 않는 참고 정보다.
+   tone: good(긍정) / warn(주의) / flat(중립·판단보류)
+   ============================================================ */
+
+function swingPoints(bars, span = 3) {
+  // 앞뒤 span봉보다 높으면 스윙 고점, 낮으면 스윙 저점으로 본다.
+  const highs = [], lows = [];
+  for (let i = span; i < bars.length - span; i++) {
+    const w = bars.slice(i - span, i + span + 1);
+    if (bars[i].h >= Math.max(...w.map(b => b.h))) highs.push({ i, v: bars[i].h });
+    if (bars[i].l <= Math.min(...w.map(b => b.l))) lows.push({ i, v: bars[i].l });
+  }
+  return { highs, lows };
+}
+
+function analyzeReboundQuality(bars) {
+  // ① 찐 반등인가 — 최근 저점 이후 상승 구간의 거래량이 직전 하락 구간보다 늘었는지
+  const recent = bars.slice(-40);
+  if (recent.length < 12) return null;
+  let li = 0;
+  recent.forEach((b, i) => { if (b.l < recent[li].l) li = i; });
+  const upLeg = recent.slice(li), downLeg = recent.slice(0, li + 1);
+  if (upLeg.length < 3 || downLeg.length < 3) {
+    return { key:"rebound", title:"거래량 동반 반등", tone:"flat",
+      head:"아직 반등 구간이라 부르기 이릅니다",
+      body:"최근 저점이 너무 가까워 반등의 질을 따지기 어렵습니다. 며칠 더 지켜보세요." };
+  }
+  const avg = arr => arr.reduce((a, b) => a + (b.v || 0), 0) / (arr.length || 1);
+  const upV = avg(upLeg), downV = avg(downLeg);
+  const gain = upLeg[upLeg.length - 1].c / recent[li].l - 1;
+  const ratio = downV ? upV / downV : 1;
+  if (gain <= 0.005) {
+    return { key:"rebound", title:"거래량 동반 반등", tone:"flat",
+      head:"뚜렷한 반등이 보이지 않습니다",
+      body:"최근 저점에서 의미 있게 올라오지 못했습니다. 반등 여부를 논할 단계가 아닙니다." };
+  }
+  if (ratio >= 1.2) {
+    return { key:"rebound", title:"거래량 동반 반등", tone:"good",
+      head:`거래가 붙은 반등입니다 (저점 대비 ${pct(gain)})`,
+      body:`오를 때 거래량이 내릴 때보다 ${ratio.toFixed(1)}배 많습니다. 사려는 힘이 실제로 들어왔다는 뜻이라, 되밀릴 확률이 상대적으로 낮은 편입니다.` };
+  }
+  if (ratio <= 0.8) {
+    return { key:"rebound", title:"거래량 동반 반등", tone:"warn",
+      head:`거래 없이 오른 반등입니다 (저점 대비 ${pct(gain)})`,
+      body:"오를 때 거래량이 오히려 줄었습니다. 팔 사람이 잠깐 없어서 오른 것일 수 있어, 다시 밀릴 위험이 있습니다." };
+  }
+  return { key:"rebound", title:"거래량 동반 반등", tone:"flat",
+    head:`반등 중이나 거래량은 평범합니다 (저점 대비 ${pct(gain)})`,
+    body:"거래량이 특별히 늘지도 줄지도 않았습니다. 이것만으로는 진짜 반등인지 판단하기 어렵습니다." };
+}
+
+function analyzeBox(bars, price) {
+  // ② 박스권 상단 돌파 — 최근 60봉 고저 폭이 좁으면 박스권으로 본다
+  const w = bars.slice(-60);
+  if (w.length < 20) return null;
+  const hi = Math.max(...w.map(b => b.h)), lo = Math.min(...w.map(b => b.l));
+  const width = hi / lo - 1;
+  const posInBox = (price - lo) / Math.max(hi - lo, 1e-9);
+  if (width > 0.35) {
+    return { key:"box", title:"박스권 상단 돌파", tone:"flat",
+      head:"박스권이라 부르기엔 변동이 큽니다",
+      body:`최근 구간의 고저 폭이 ${pct(width)}로 넓어, 옆으로 눕는 박스 형태가 아닙니다. 추세로 보는 편이 맞습니다.` };
+  }
+  if (price >= hi * 0.999) {
+    return { key:"box", title:"박스권 상단 돌파", tone:"good",
+      head:`박스권 상단(${Math.round(hi).toLocaleString("ko-KR")})을 넘어섰습니다`,
+      body:"오랫동안 막히던 가격대를 넘었습니다. 다만 넘자마자 되밀리는 '속임수 돌파'도 흔하니, 거래량이 함께 늘었는지 위 항목을 같이 보세요." };
+  }
+  if (posInBox >= 0.85) {
+    return { key:"box", title:"박스권 상단 돌파", tone:"warn",
+      head:`박스권 상단 부근입니다 (구간의 ${(posInBox * 100).toFixed(0)}% 지점)`,
+      body:`${Math.round(lo).toLocaleString("ko-KR")}~${Math.round(hi).toLocaleString("ko-KR")} 사이를 오가는 중이고, 지금은 위쪽 끝입니다. 넘으면 돌파, 막히면 다시 아래로 밀릴 자리라 성급한 추격은 위험합니다.` };
+  }
+  if (posInBox <= 0.2) {
+    return { key:"box", title:"박스권 상단 돌파", tone:"flat",
+      head:`박스권 하단 부근입니다 (구간의 ${(posInBox * 100).toFixed(0)}% 지점)`,
+      body:`${Math.round(lo).toLocaleString("ko-KR")}~${Math.round(hi).toLocaleString("ko-KR")} 박스의 아래쪽입니다. 하단이 지켜지는지가 관건입니다.` };
+  }
+  return { key:"box", title:"박스권 상단 돌파", tone:"flat",
+    head:`박스권 중간입니다 (구간의 ${(posInBox * 100).toFixed(0)}% 지점)`,
+    body:`${Math.round(lo).toLocaleString("ko-KR")}~${Math.round(hi).toLocaleString("ko-KR")} 사이에 머물러 있습니다. 방향이 정해지지 않은 자리입니다.` };
+}
+
+function analyzeChannel(bars, price) {
+  // ③ 채널 — 자의성이 커서 '참고'로만 약하게 표현한다(회귀직선 기울기 기준)
+  const w = bars.slice(-40);
+  if (w.length < 20) return null;
+  const n = w.length;
+  const xs = w.map((_, i) => i), ys = w.map(b => b.c);
+  const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) { num += (xs[i] - mx) * (ys[i] - my); den += (xs[i] - mx) ** 2; }
+  const slope = den ? num / den : 0;
+  const fit = i => my + slope * (i - mx);
+  const resid = w.map((b, i) => b.c - fit(i));
+  const sd = Math.sqrt(resid.reduce((a, r) => a + r * r, 0) / n);
+  const dev = sd ? (price - fit(n - 1)) / sd : 0;
+  const slopePct = fit(n - 1) ? (slope * n) / fit(n - 1) : 0;
+  const dir = slopePct > 0.03 ? "완만한 상승" : slopePct < -0.03 ? "완만한 하락" : "방향성 약한";
+  let head, body, tone = "flat";
+  if (dev >= 2) {
+    tone = "warn";
+    head = `${dir} 흐름의 위쪽으로 많이 벌어졌습니다`;
+    body = "최근 추세선보다 눈에 띄게 위에 있습니다. 단기 과열일 수 있으나, 채널 계산은 어느 구간을 잡느냐에 따라 달라지므로 참고로만 보세요.";
+  } else if (dev <= -2) {
+    head = `${dir} 흐름의 아래쪽으로 많이 벌어졌습니다`;
+    body = "최근 추세선보다 눈에 띄게 아래에 있습니다. 과매도일 수도, 추세가 꺾인 것일 수도 있어 단정하기 어렵습니다.";
+  } else {
+    head = `${dir} 흐름 안에서 움직이고 있습니다`;
+    body = "최근 추세선 주변에 머물러 있어, 이탈이라 부를 만한 움직임은 없습니다.";
+  }
+  return { key:"channel", title:"채널 이탈 (참고용)", tone, head, body, weak:true };
+}
+
+function analyzePrevHigh(bars, price, w52) {
+  // ④ 전고점 돌파 — 위쪽에 남아 있는 스윙 고점(저항)을 기준으로 본다
+  const { highs } = swingPoints(bars.slice(-90));
+  if (!highs.length) return null;
+  const above = highs.filter(h => h.v > price).map(h => h.v);
+  const isNewHigh = w52 && w52.position >= 0.99;
+  if (isNewHigh) {
+    return { key:"prevhigh", title:"전고점 돌파", tone:"good",
+      head:"52주 신고가 부근입니다",
+      body:"위쪽에 막아설 매물이 거의 없다는 뜻이라 위로 열려 있습니다. 다만 신고가에서 물리면 기댈 지지선도 없으니 손절 기준을 꼭 정해두세요." };
+  }
+  if (!above.length) {
+    // 위쪽에 스윙 고점이 하나도 없다 = 최근 구간의 고점들을 모두 넘어선 상태
+    const lastHigh = Math.max(...highs.map(h => h.v));
+    return { key:"prevhigh", title:"전고점 돌파", tone:"good",
+      head:`최근 고점(${Math.round(lastHigh).toLocaleString("ko-KR")})을 모두 넘어섰습니다`,
+      body:"최근 구간에서 막아서던 고점들을 위로 통과한 상태입니다. 넘은 자리가 이제는 지지가 되어주는지 확인하면 좋습니다." };
+  }
+  const nearest = Math.min(...above);
+  const gap = price / nearest - 1;   // 항상 음수(저항이 위에 있으므로)
+  if (gap >= -0.03) {
+    return { key:"prevhigh", title:"전고점 돌파", tone:"warn",
+      head:`위쪽 고점(${Math.round(nearest).toLocaleString("ko-KR")})이 코앞입니다 (${pct(gap)})`,
+      body:"넘어야 할 벽이 가깝습니다. 여기서 막히면 다시 밀리는 경우가 많아, 돌파를 확인하고 접근하는 편이 안전합니다." };
+  }
+  return { key:"prevhigh", title:"전고점 돌파", tone:"flat",
+    head:`위쪽 고점까지 ${pct(Math.abs(gap))} 남았습니다`,
+    body:`가장 가까운 저항은 ${Math.round(nearest).toLocaleString("ko-KR")} 부근입니다. 아직 거리가 있어 돌파를 논할 단계는 아닙니다.` };
+}
+
+function analyzePullback(bars, price) {
+  // ⑤ 되돌림 폭
+  const w = bars.slice(-90);
+  if (w.length < 20) return null;
+  let li = 0;
+  w.forEach((b, i) => { if (b.l < w[li].l) li = i; });
+  const after = w.slice(li);
+  if (after.length < 5) return null;
+  let hi = after[0].h, hIdx = 0;
+  after.forEach((b, i) => { if (b.h > hi) { hi = b.h; hIdx = i; } });
+  const lo = w[li].l;
+  const rise = hi - lo;
+  const barsSinceHigh = after.length - 1 - hIdx;
+  if (rise <= 0 || barsSinceHigh <= 2) {
+    return { key:"pullback", title:"되돌림 폭", tone:"flat",
+      head:"아직 되돌림이 없습니다",
+      body:"최근 고점이 바로 근처라 얼마나 되밀렸는지 따질 구간이 없습니다. 고점 부근에 머물러 있는 상태입니다." };
+  }
+  const back = (hi - price) / rise;
+  if (back <= 0.05) {
+    return { key:"pullback", title:"되돌림 폭", tone:"good",
+      head:"고점 부근을 지키고 있습니다",
+      body:`${Math.round(lo).toLocaleString("ko-KR")}에서 ${Math.round(hi).toLocaleString("ko-KR")}까지 오른 뒤 거의 밀리지 않았습니다. 오른 자리를 지킨다는 것은 힘이 남아 있다는 뜻으로 보지만, 그만큼 새로 들어가기에는 부담이 큰 자리이기도 합니다.` };
+  }
+  const lvl = back >= 0.75 ? "대부분" : back >= 0.55 ? "절반 이상" : back >= 0.3 ? "3분의 1쯤" : "조금";
+  const tone = back >= 0.75 ? "warn" : back <= 0.4 ? "good" : "flat";
+  const fib = back >= 0.34 && back <= 0.42 ? " 흔히 말하는 38.2% 부근입니다."
+    : back >= 0.46 && back <= 0.54 ? " 흔히 말하는 50% 부근입니다."
+    : back >= 0.58 && back <= 0.66 ? " 흔히 말하는 61.8% 부근입니다." : "";
+  return { key:"pullback", title:"되돌림 폭", tone,
+    head:`상승분의 ${(back * 100).toFixed(0)}%를 되돌렸습니다 (${lvl})`,
+    body:`${Math.round(lo).toLocaleString("ko-KR")}에서 ${Math.round(hi).toLocaleString("ko-KR")}까지 오른 뒤 밀린 상태입니다.${fib} 다만 특정 비율에서 반드시 반등한다는 보장은 없습니다. 되돌림이 깊을수록 상승 흐름이 깨졌을 가능성도 커집니다.` };
+}
+
+function analyzeLowLevel(bars, price, w52) {
+  // ⑥ 저점 수준 — 저점이 계단식으로 올라오는지
+  const { lows } = swingPoints(bars.slice(-90));
+  const last3 = lows.slice(-3);
+  const posTxt = w52 ? `52주 구간에서는 ${(w52.position * 100).toFixed(0)}% 지점입니다.` : "";
+  if (last3.length < 2) {
+    return { key:"lowlevel", title:"저점 수준", tone:"flat",
+      head:"저점을 비교할 만큼 자료가 모이지 않았습니다", body:posTxt };
+  }
+  const rising = last3.every((p, i) => i === 0 || p.v > last3[i - 1].v);
+  const falling = last3.every((p, i) => i === 0 || p.v < last3[i - 1].v);
+  const lastLow = last3[last3.length - 1].v;
+  if (rising) {
+    return { key:"lowlevel", title:"저점 수준", tone:"good",
+      head:"저점이 계단식으로 높아지고 있습니다",
+      body:`밀릴 때마다 더 높은 자리에서 받쳐주고 있다는 뜻으로, 사려는 쪽이 버티는 모습입니다. 가장 최근 저점은 ${Math.round(lastLow).toLocaleString("ko-KR")}입니다. ${posTxt}` };
+  }
+  if (falling) {
+    return { key:"lowlevel", title:"저점 수준", tone:"warn",
+      head:"저점이 계속 낮아지고 있습니다",
+      body:`반등해도 이전보다 낮은 자리에서 다시 밀리고 있습니다. 하락 흐름이 이어지는 전형적인 모습이라 신규 매수는 특히 조심해야 합니다. 가장 최근 저점은 ${Math.round(lastLow).toLocaleString("ko-KR")}입니다. ${posTxt}` };
+  }
+  return { key:"lowlevel", title:"저점 수준", tone:"flat",
+    head:"저점이 뚜렷한 방향을 보이지 않습니다",
+    body:`가장 최근 저점은 ${Math.round(lastLow).toLocaleString("ko-KR")} 부근입니다. ${posTxt}` };
+}
+
+function volumeProfile(bars, bins = 24) {
+  // ⑦ 매물대 — 각 봉의 거래량을 고가~저가에 균등 배분한 근사치
+  if (!bars.length) return null;
+  const lo = Math.min(...bars.map(b => b.l)), hi = Math.max(...bars.map(b => b.h));
+  if (!(hi > lo)) return null;
+  const step = (hi - lo) / bins;
+  const buckets = new Array(bins).fill(0);
+  for (const b of bars) {
+    const v = b.v || 0;
+    if (!v) continue;
+    const from = Math.max(0, Math.floor((b.l - lo) / step));
+    const to = Math.min(bins - 1, Math.floor((b.h - lo) / step));
+    const span = to - from + 1;
+    for (let i = from; i <= to; i++) buckets[i] += v / span;
+  }
+  return { lo, hi, step, buckets, max: Math.max(...buckets, 1) };
+}
+
+function analyzeVolumeProfile(bars, price) {
+  const vp = volumeProfile(bars);
+  if (!vp) return null;
+  const idxOf = p => Math.max(0, Math.min(vp.buckets.length - 1, Math.floor((p - vp.lo) / vp.step)));
+  const cur = idxOf(price);
+  const peak = vp.buckets.indexOf(Math.max(...vp.buckets));
+  const peakPrice = vp.lo + (peak + 0.5) * vp.step;
+  const above = vp.buckets.slice(cur + 1), below = vp.buckets.slice(0, cur);
+  const sum = a => a.reduce((x, y) => x + y, 0);
+  const aboveMax = above.length ? Math.max(...above) : 0;
+  const belowMax = below.length ? Math.max(...below) : 0;
+  const aboveIdx = above.length ? cur + 1 + above.indexOf(aboveMax) : -1;
+  const belowIdx = below.length ? below.indexOf(belowMax) : -1;
+  const resist = aboveIdx >= 0 ? vp.lo + (aboveIdx + 0.5) * vp.step : null;
+  const support = belowIdx >= 0 ? vp.lo + (belowIdx + 0.5) * vp.step : null;
+  const heavyAbove = sum(above) > sum(below) * 1.3;
+  const parts = [];
+  if (resist) parts.push(`위쪽 ${Math.round(resist).toLocaleString("ko-KR")} 부근에 물량이 몰려 있어 올라갈 때 저항이 될 수 있습니다`);
+  if (support) parts.push(`아래쪽 ${Math.round(support).toLocaleString("ko-KR")} 부근이 두터워 밀릴 때 받쳐줄 수 있습니다`);
+  return { key:"volprofile", title:"매물대", tone: heavyAbove ? "warn" : "good",
+    head:`거래가 가장 많았던 가격대는 ${Math.round(peakPrice).toLocaleString("ko-KR")} 부근입니다`,
+    body:`${parts.join(". ")}. 이 매물대는 실제 체결 단가가 아니라 봉 자료로 계산한 근사치라 참고용입니다.` };
+}
+
+function analyzeMaOrder(s) {
+  // 추가 — 이동평균 배열
+  const { ma20, ma60, ma120, price } = s;
+  if (!ma20 || !ma60 || !ma120) return null;
+  if (price > ma20 && ma20 > ma60 && ma60 > ma120) {
+    return { key:"maorder", title:"이동평균 배열", tone:"good",
+      head:"정배열입니다 (단기>중기>장기)",
+      body:"짧은 기간의 평균가가 긴 기간보다 높게 늘어선 상태로, 상승 흐름에서 흔히 나타나는 모습입니다." };
+  }
+  if (price < ma20 && ma20 < ma60 && ma60 < ma120) {
+    return { key:"maorder", title:"이동평균 배열", tone:"warn",
+      head:"역배열입니다 (단기<중기<장기)",
+      body:"하락 흐름에서 나타나는 배열입니다. 반등이 나와도 위쪽 이동평균선에 막히는 경우가 많습니다." };
+  }
+  return { key:"maorder", title:"이동평균 배열", tone:"flat",
+    head:"이동평균선이 뒤엉켜 있습니다",
+    body:"방향이 정해지지 않은 구간입니다. 이럴 때는 거래량이 실린 쪽으로 방향이 잡히는지 지켜보는 편이 낫습니다." };
+}
+
+function readChart(s, bars) {
+  if (!bars || bars.length < 12) return [];
+  const price = s.price;
+  const w52 = s.week52;
+  return [
+    analyzeReboundQuality(bars),
+    analyzeBox(bars, price),
+    analyzePrevHigh(bars, price, w52),
+    analyzePullback(bars, price),
+    analyzeLowLevel(bars, price, w52),
+    analyzeVolumeProfile(bars, price),
+    analyzeMaOrder(s),
+    analyzeChannel(bars, price),   // 자의성이 커서 마지막에 약하게 배치
+  ].filter(Boolean);
+}
+
+function indexAsStock(market) {
+  const m = state?.markets.find(x => x.market === market);
+  if (!m) return null;
+  // 지수는 사고파는 대상이 아니라 진입·손절·목표가가 없다. 대신 이동평균선을 그린다.
+  return {
+    code: `IDX:${market}`, name: m.name || market, market, sector: "지수",
+    price: m.close, change_pct: m.change_pct,
+    ma20: m.ma20, ma60: m.ma60, ma120: m.ma120,
+    week52: m.week52 || null,
+    isIndex: true,
+  };
+}
+
+function openIndexChart(market) {
+  const s = indexAsStock(market);
+  if (!s) return;
+  selectedCode = s.code;
+  loadIntraday().then(() => {
+    if (selectedCode !== s.code) return;
+    setupTfTabs(s.code);
+    renderFsChart();
+    const dlg = $("#chart-fs");
+    if (!dlg.open) dlg.showModal();
+  });
+}
+
+function currentSubject() {
+  // 현재 차트가 보여주는 대상(종목 또는 지수)을 돌려준다.
+  if (String(selectedCode).startsWith("IDX:")) return indexAsStock(selectedCode.slice(4));
+  return state?.stocks.find(x => x.code === selectedCode) || null;
+}
+
+function renderChartReading(s, bars, targetId) {
+  const box = $(targetId);
+  if (!box) return;
+  const items = readChart(s, bars);
+  if (!items.length) {
+    box.innerHTML = `<h4>차트 읽기</h4><p class="read-sub">캔들 자료가 충분하지 않아 해설을 만들 수 없습니다.</p>`;
+    return;
+  }
+  box.innerHTML = `<h4>차트 읽기 · ${TF_LABEL[selectedTf] || selectedTf}</h4>
+    <p class="read-sub">캔들 배열만 보고 계산한 참고 정보입니다. 종합점수에는 반영되지 않습니다.</p>
+    ${items.map(it => `
+      <details class="read-item${it.weak ? " weak" : ""}">
+        <summary><span class="read-dot ${it.tone}"></span><span class="read-name">${esc(it.title)}</span><span class="read-head">${esc(it.head)}</span></summary>
+        <p class="read-body">${esc(it.body)}</p>
+      </details>`).join("")}
+    <p class="read-note">시간대 탭을 바꾸면 해설도 그 시간대 기준으로 다시 계산됩니다. 짧은 시간대일수록 신호가 자주 바뀌니, 큰 흐름은 일봉·주봉으로 함께 확인하세요.</p>`;
+}
+
 function buildCandleSVG(s, allBars, big) {
   const maxN = big ? 120 : 60;              // 작은 차트는 최근 것 위주로 적게 → 캔들이 커진다
   const bars = allBars.slice(-maxN);
@@ -1214,7 +1590,9 @@ function buildCandleSVG(s, allBars, big) {
   const n = bars.length;
   const cw = Math.max(2, Math.min(big ? 20 : 11, plotW / n * 0.7));
 
-  const refs = [s.entry_low, s.entry_high, s.stop, s.target1, s.target2, s.price].filter(Number.isFinite);
+  const refs = (s.isIndex
+    ? [s.ma20, s.ma60, s.ma120, s.price]
+    : [s.entry_low, s.entry_high, s.stop, s.target1, s.target2, s.price]).filter(Number.isFinite);
   const lo0 = Math.min(...bars.map(b => b.l), ...refs);
   const hi0 = Math.max(...bars.map(b => b.h), ...refs);
   const pad = (hi0 - lo0) * 0.06 || hi0 * 0.02 || 1;
@@ -1226,9 +1604,12 @@ function buildCandleSVG(s, allBars, big) {
   const volTop = MT + priceH + gap;
   const vyAt = v => volTop + (1 - v / maxVol) * volH;
 
-  // 진입 구간 띠
-  const eTop = yAt(Math.max(s.entry_high, s.entry_low)), eBot = yAt(Math.min(s.entry_high, s.entry_low));
-  let svg = `<rect x="${ML}" y="${eTop.toFixed(1)}" width="${plotW}" height="${Math.max(1, eBot - eTop).toFixed(1)}" style="fill:var(--signal);opacity:.14"/>`;
+  // 진입 구간 띠 (지수는 매매 대상이 아니라 표시하지 않는다)
+  let svg = "";
+  if (!s.isIndex && Number.isFinite(s.entry_low) && Number.isFinite(s.entry_high)) {
+    const eTop = yAt(Math.max(s.entry_high, s.entry_low)), eBot = yAt(Math.min(s.entry_high, s.entry_low));
+    svg += `<rect x="${ML}" y="${eTop.toFixed(1)}" width="${plotW}" height="${Math.max(1, eBot - eTop).toFixed(1)}" style="fill:var(--signal);opacity:.14"/>`;
+  }
 
   // 날짜/시간 구분선 + 라벨
   const isIntradayTf = ["15m","30m","60m","4h"].includes(selectedTf);
@@ -1253,11 +1634,35 @@ function buildCandleSVG(s, allBars, big) {
       <rect x="${W - MR + 2}" y="${(yy - fs / 2 - 2).toFixed(1)}" width="${badgeW}" height="${fs + 5}" rx="3" style="fill:${color};opacity:.14"/>
       <text x="${W - MR + 5}" y="${(yy + fs / 2 - 1).toFixed(1)}" style="font:${fs}px var(--font-mono);fill:${color}">${label}</text>`;
   };
-  svg += refLine(s.stop, "var(--down)", "4,3", "손절");
-  svg += refLine(s.target1, "var(--up)", "", "1차");
-  svg += refLine(s.target2, "var(--up)", "4,3", "2차");
+  if (s.isIndex) {
+    // 지수는 매매 참고선 대신 이동평균선을 표시한다.
+    svg += refLine(s.ma20, "#a5680a", "", "20일");
+    svg += refLine(s.ma60, "#3568c9", "", "60일");
+    svg += refLine(s.ma120, "#6b7280", "5,4", "120일");
+  } else {
+    svg += refLine(s.stop, "var(--down)", "4,3", "손절");
+    svg += refLine(s.target1, "var(--up)", "", "1차");
+    svg += refLine(s.target2, "var(--up)", "4,3", "2차");
+  }
+
+  // 매물대 — 오른쪽에 가로 막대로 겹쳐 그린다(가격대별 거래량 근사치)
+  const vp = volumeProfile(bars, big ? 30 : 20);
+  if (vp) {
+    const vpW = plotW * (big ? 0.16 : 0.2);
+    const x0 = ML + plotW - vpW;
+    vp.buckets.forEach((v, i) => {
+      if (!v) return;
+      const yTop = yAt(vp.lo + (i + 1) * vp.step);
+      const yBot = yAt(vp.lo + i * vp.step);
+      const h = Math.max(1, yBot - yTop - 1);
+      const wRatio = v / vp.max;
+      svg += `<rect x="${(x0 + vpW * (1 - wRatio)).toFixed(1)}" y="${yTop.toFixed(1)}" width="${(vpW * wRatio).toFixed(1)}" height="${h.toFixed(1)}" style="fill:#7d8794;opacity:.22"/>`;
+    });
+    svg += `<text x="${(x0 + vpW).toFixed(1)}" y="${(MT + fs).toFixed(1)}" text-anchor="end" style="font:${fs - 1}px var(--font-mono);fill:#a9a294">매물대</text>`;
+  }
 
   // 캔들 + 거래량 막대
+  const avgVol = bars.reduce((a, b) => a + (b.v || 0), 0) / (bars.length || 1);
   bars.forEach((b, i) => {
     const x = xAt(i);
     const up = b.c >= b.o;
@@ -1268,7 +1673,11 @@ function buildCandleSVG(s, allBars, big) {
     svg += `<rect x="${(x - cw / 2).toFixed(1)}" y="${top.toFixed(1)}" width="${cw.toFixed(1)}" height="${bh.toFixed(1)}" style="fill:${col}"/>`;
     if (b.v) {
       const vy = vyAt(b.v);
-      svg += `<rect x="${(x - cw / 2).toFixed(1)}" y="${vy.toFixed(1)}" width="${cw.toFixed(1)}" height="${(volTop + volH - vy).toFixed(1)}" style="fill:${col};opacity:.35"/>`;
+      const spike = avgVol && b.v >= avgVol * 2;
+      svg += `<rect x="${(x - cw / 2).toFixed(1)}" y="${vy.toFixed(1)}" width="${cw.toFixed(1)}" height="${(volTop + volH - vy).toFixed(1)}" style="fill:${col};opacity:${spike ? .85 : .35}"/>`;
+      if (spike) {
+        svg += `<circle cx="${x.toFixed(1)}" cy="${(vy - 4).toFixed(1)}" r="${big ? 2.6 : 1.8}" style="fill:${col}"/>`;
+      }
     }
   });
 
@@ -1299,10 +1708,11 @@ function renderIntradayChart(s) {
   box.innerHTML = buildCandleSVG(s, bars, false) + `<span class="chart-expand-hint">터치하면 확대 ⤢</span>`;
   const last = bars[bars.length - 1];
   $("#chart-asof").textContent = last?.t ? `${TF_LABEL[selectedTf]} · ${dateTime(last.t)} 기준 · 최근 60봉` : "";
+  renderChartReading(s, bars, "#chart-reading");
 }
 
 function renderFsChart() {
-  const s = state?.stocks.find(x => x.code === selectedCode);
+  const s = currentSubject();
   if (!s) return;
   const bars = framesFor(s.code)?.[selectedTf] || [];
   const box = $("#fs-chart");
@@ -1315,6 +1725,7 @@ function renderFsChart() {
   const last = bars[bars.length - 1];
   $("#fs-title").textContent = `${s.name} · ${TF_LABEL[selectedTf]}`;
   $("#fs-asof").textContent = last?.t ? `${dateTime(last.t)} 기준 · 최근 120봉` : "";
+  renderChartReading(s, bars, "#fs-reading");
 }
 
 function openChartFullscreen() {
@@ -1380,8 +1791,12 @@ function openDetail(code) {
         <span><i class="lg lg-stop"></i>손절</span>
         <span><i class="lg lg-t1"></i>1차 목표</span>
         <span><i class="lg lg-t2"></i>2차 목표</span>
+        <span><i class="lg lg-vp"></i>매물대</span>
+        <span><i class="lg lg-spike"></i>거래량 급증</span>
       </div>
     </div>
+
+    <div class="read-box" id="chart-reading"></div>
 
     <div class="w52-box">
       <div class="w52-head"><span>52주 최저 ${won(w52.low)}</span><span>52주 최고 ${won(w52.high)}</span></div>
@@ -1473,15 +1888,17 @@ document.addEventListener("click", e => {
   if (tf) {
     if (tf.disabled) return;
     selectedTf = tf.dataset.tf;
-    const s = state?.stocks.find(x => x.code === selectedCode);
+    const s = currentSubject();
     if (s) {
       setupTfTabs(selectedCode);
-      renderIntradayChart(s);
+      if (!s.isIndex) renderIntradayChart(s);
       if ($("#chart-fs").open) renderFsChart();
     }
     return;
   }
   if (e.target.closest("#intraday-chart")) return openChartFullscreen();
+  const idxCard = e.target.closest("[data-index]");
+  if (idxCard) return openIndexChart(idxCard.dataset.index);
   const row = e.target.closest("[data-code]");
   if (row) openDetail(row.dataset.code);
 });
@@ -1489,6 +1906,8 @@ document.addEventListener("click", e => {
 document.addEventListener("keydown", e => {
   const row = e.target.closest?.("tr[data-code]");
   if (row && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openDetail(row.dataset.code); }
+  const idxCard = e.target.closest?.("[data-index]");
+  if (idxCard && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openIndexChart(idxCard.dataset.index); }
   if (e.key === "Enter" && e.target.id === "avg-price") { e.preventDefault(); applyPosition(); }
 });
 
