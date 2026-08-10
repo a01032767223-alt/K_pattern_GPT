@@ -283,6 +283,7 @@ dialog::backdrop{background:#0a121fa8}
 .chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 .chart-head h4{font-size:13px;margin:0;font-weight:600}
 .chart-asof{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+.sample-tag{display:inline-block;margin-left:7px;font-size:10px;font-weight:700;color:#9a3a34;background:#fdecea;border-radius:5px;padding:2px 6px;vertical-align:middle}
 .tf-tabs{display:flex;gap:3px;background:#efece1;border-radius:9px;padding:3px;margin-bottom:10px;overflow-x:auto}
 .tf-tabs button{border:0;background:transparent;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700;color:#5c6570;white-space:nowrap;font-family:var(--font-mono)}
 .tf-tabs button.active{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(20,20,10,.14)}
@@ -1724,7 +1725,8 @@ function renderIntradayChart(s) {
   }
   box.innerHTML = buildCandleSVG(s, bars, false) + `<span class="chart-expand-hint">터치하면 확대 ⤢</span>`;
   const last = bars[bars.length - 1];
-  $("#chart-asof").textContent = last?.t ? `${TF_LABEL[selectedTf]} · ${dateTime(last.t)} 기준 · 최근 60봉` : "";
+  const sampleTag = state?.sample ? `<span class="sample-tag">샘플</span>` : "";
+  $("#chart-asof").innerHTML = last?.t ? `${TF_LABEL[selectedTf]} · ${dateTime(last.t)} 기준 · 최근 60봉${sampleTag}` : "";
   renderChartReading(s, bars, "#chart-reading");
 }
 
@@ -1741,6 +1743,7 @@ function renderFsChart() {
   box.innerHTML = buildCandleSVG(s, bars, true);
   const last = bars[bars.length - 1];
   $("#fs-title").textContent = `${s.name} · ${TF_LABEL[selectedTf]}`;
+  if (state?.sample) $("#fs-title").insertAdjacentHTML("beforeend", `<span class="sample-tag">샘플</span>`);
   $("#fs-asof").textContent = last?.t ? `${dateTime(last.t)} 기준 · 최근 120봉` : "";
   renderChartReading(s, bars, "#fs-reading");
 }

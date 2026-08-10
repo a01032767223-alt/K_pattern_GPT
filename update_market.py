@@ -993,16 +993,26 @@ def _sample_intraday(code: str, last_price: float) -> dict:
                 slots.append(t)
             t -= step
         slots.reverse()
-        bars, price = [], last_price * 0.9
-        for ts in slots:
-            o = price
-            price *= 1 + rnd.gauss(0.0004, vol)
-            hi = max(o, price) * (1 + abs(rnd.gauss(0, vol * 0.5)))
-            lo = min(o, price) * (1 - abs(rnd.gauss(0, vol * 0.5)))
-            bars.append({"t": ts.replace(microsecond=0).isoformat(), "o": round(o), "h": round(hi),
-                         "l": round(lo), "c": round(price), "v": rnd.randint(50000, 3000000)})
-        if bars:
-            bars[-1]["c"] = round(last_price)
+        # 1) 임의의 등락만으로 봉을 만든다(시작값은 1.0, 절대 수준은 의미 없음).
+        raw = []
+        level = 1.0
+        for _ in slots:
+            o = level
+            level *= 1 + rnd.gauss(0.0004, vol)
+            hi = max(o, level) * (1 + abs(rnd.gauss(0, vol * 0.5)))
+            lo = min(o, level) * (1 - abs(rnd.gauss(0, vol * 0.5)))
+            raw.append({"o": o, "h": hi, "l": lo, "c": level})
+        # 2) 마지막 종가가 정확히 오늘 현재가가 되도록 전체 봉을 한 번에 비례 조정한다.
+        #    (마지막 값만 덮어쓰면 그 봉 하나만 위아래로 튀는 부자연스러운 모양이 된다.)
+        scale = last_price / raw[-1]["c"]
+        bars = []
+        for ts, r in zip(slots, raw):
+            bars.append({
+                "t": ts.replace(microsecond=0).isoformat(),
+                "o": round(r["o"] * scale), "h": round(r["h"] * scale),
+                "l": round(r["l"] * scale), "c": round(r["c"] * scale),
+                "v": rnd.randint(50000, 3000000),
+            })
         return bars
 
     frames["15m"] = gen(80, timedelta(minutes=15), 0.004, True)
