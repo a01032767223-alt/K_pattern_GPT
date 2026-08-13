@@ -594,10 +594,28 @@ def build_stock(meta: dict, raw: dict, market: dict) -> dict:
             return "낮음"
         return "보통"
 
+    def sell_confidence() -> str:
+        # 20일선과의 이격도, 20일선·60일선의 역배열 정도, 하락에 거래량이 실렸는지로
+        # "확신"을 실제로 계산한다. 조건을 걸치기만 해도 무조건 "높음"으로 고정되던 문제를 고친다.
+        if pattern != "DOWNTREND":
+            return "보통"  # ma60 하회 + 저점수 조건으로만 걸린 경우는 근거가 약하다.
+        gap20 = (ma20 - price) / ma20 if ma20 else 0.0
+        gap_ma = (ma60 - ma20) / ma60 if (ma60 and ma20) else 0.0
+        if gap20 >= 0.03 and gap_ma >= 0.02 and vol_ratio >= 1.0:
+            return "높음"
+        if gap20 < 0.01 or vol_ratio < 0.8:
+            return "낮음"
+        return "보통"
+
     if pattern == "DOWNTREND" or (ma60 and price < ma60 and score < 45):
         action, label = "SELL_REVIEW", "신규 매수 제외"
-        summary = "하락 추세가 확인되어 새로 사기에 적절하지 않습니다. 보유 중이라면 손절 기준을 점검하세요."
-        confidence = "높음"
+        confidence = sell_confidence()
+        weak_note = (
+            " 다만 20일선을 벗어난 폭이 아직 크지 않거나 거래량이 뒷받침되지 않아 확신도는 낮게 봅니다."
+            if confidence == "낮음" else
+            " 근거가 약한 편이라 다른 신호(거래량·수급)도 함께 확인하세요." if confidence == "보통" else ""
+        )
+        summary = f"하락 추세가 확인되어 새로 사기에 적절하지 않습니다. 보유 중이라면 손절 기준을 점검하세요.{weak_note}"
     elif tradeable and r14 < 75:
         action, label = "BUY_REVIEW", "매수 검토"
         confidence = buy_confidence()
